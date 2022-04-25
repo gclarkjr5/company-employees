@@ -50,11 +50,14 @@ fn get_dept_employees(company: &mut Company, dept: &String) -> Vec<String> {
 }
 
 fn add_employee_existing_department(company: &mut Company, name: String, dept: String) -> &mut Company{
+
     let mut employees = get_dept_employees(company, &dept);
 
     employees.push(name);
 
-    company.employee_list.entry(dept).or_insert(employees);
+    employees.sort();
+
+    company.employee_list.insert(dept, employees);
 
     company
 }
@@ -101,40 +104,42 @@ mod tests {
     }
 
 
-    // #[test]
-    // fn test_add_multiple_employees_same_department() {
-    //     let mut company = Company {
-    //         employee_list: HashMap::new()
-    //     };
+    #[test]
+    fn test_add_multiple_employees_same_department() {
+        let mut company = Company {
+            employee_list: HashMap::new()
+        };
 
-    //     company = add_employee(&mut company, "gary".to_string(), "sales".to_string());
-    //     company = add_employee(&mut company, "aleks".to_string(), "sales".to_string());
+        let mut company = add_employee(&mut company, "gary".to_string(), "sales".to_string());
 
-    //     assert_eq!(
-    //         company.employee_list.get_key_value(&"sales".to_string()),
-    //         Some((&"sales".to_string(), &vec!["gary".to_string(), "aleks".to_string()]))
-    //     )
+        let company = add_employee(&mut company, "aleks".to_string(), "sales".to_string());
 
-    // }
+        assert_eq!(
+            company.employee_list.get_key_value(&"sales".to_string()),
+            Some((&"sales".to_string(), &vec!["aleks".to_string(), "gary".to_string()]))
+        )
 
-    // #[test]
-    // fn test_add_multiple_employees_different_departments() {
-    //     let mut company = Company {
-    //         employee_list: HashMap::new()
-    //     };
+    }
 
-    //     company = add_employee(&mut company, "gary".to_string(), "sales".to_string());
-    //     company = add_employee(&mut company, "aleks".to_string(), "finance".to_string());
+    #[test]
+    fn test_add_multiple_employees_different_departments() {
+        let mut company = Company {
+            employee_list: HashMap::new()
+        };
 
-    //     assert_eq!(
-    //         company.employee_list.get_key_value(&"sales".to_string()),
-    //         Some((&"sales".to_string(), &vec!["gary".to_string()]))
-    //     );
+        let mut company = add_employee(&mut company, "gary".to_string(), "sales".to_string());
+        let mut company = add_employee(&mut company, "aleks".to_string(), "finance".to_string());
+        let company = add_employee(&mut company, "aalesund".to_string(), "finance".to_string());
 
-    //     assert_eq!(
-    //         company.employee_list.get_key_value(&"finance".to_string()),
-    //         Some((&"finance".to_string(), &vec!["aleks".to_string()]))
-    //     )
+        assert_eq!(
+            company.employee_list.get_key_value(&"sales".to_string()),
+            Some((&"sales".to_string(), &vec!["gary".to_string()]))
+        );
 
-    // }
+        assert_eq!(
+            company.employee_list.get_key_value(&"finance".to_string()),
+            Some((&"finance".to_string(), &vec!["aalesund".to_string(), "aleks".to_string()]))
+        )
+
+    }
 }
