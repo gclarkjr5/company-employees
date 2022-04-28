@@ -1,4 +1,4 @@
-use super::super::{Company};
+use super::super::super::{Company};
 
 #[cfg(test)]
 #[path="test_add.rs"]

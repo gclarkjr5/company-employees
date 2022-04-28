@@ -1,8 +1,5 @@
 use std::collections::HashMap;
 
-mod add;
-mod get;
-
 #[derive(Debug)]
 pub struct Company {
     pub employee_list: HashMap<String, Vec<String>>
