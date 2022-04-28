@@ -1,5 +1,6 @@
-mod lib;
-use lib::Company;
+mod employees;
+use employees::Company;
+
 
 fn main() {
     let mut company = Company::new();
@@ -8,16 +9,16 @@ fn main() {
 
     while output != "end" {
 
-        let input = lib::read_input("What would you like to do? Add/Get an employee/s or End operations [add/get/end]");
+        let input = employees::read_input("What would you like to do? Add/Get an employee/s or End operations [add/get/end]");
 
-        if let Err(e) = lib::parsed_action(&input) {
+        if let Err(e) = employees::parsed_action(&input) {
             eprintln!("{}", e);
         }
 
         output = match input.as_str() {
             "add" => {
-                let employee_name = lib::read_input("What is the name of the employee to add?");
-                let employee_dept = lib::read_input("What is the department they are a part of?");
+                let employee_name = employees::read_input("What is the name of the employee to add?");
+                let employee_dept = employees::read_input("What is the department they are a part of?");
 
 
                 if let Err(e) = Company::add_employee(&mut company, &employee_name, &employee_dept) {
@@ -29,7 +30,7 @@ fn main() {
                 "add"
             },
             "get" => {
-                let input = lib::read_input("Which department of employees do you want to get? Type 'all' if you want all employees in the company.");
+                let input = employees::read_input("Which department of employees do you want to get? Type 'all' if you want all employees in the company.");
                 
                 let employees = Company::get_employees(&mut company, input);
 
