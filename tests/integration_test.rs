@@ -1,21 +1,11 @@
-use super::super::super::super::*;
-
-#[test]
-#[should_panic]
-fn test_get_empty_employees() {
-    let mut company = Company::new();
-    
-    Company::get_employees(&mut company, "all".to_string()).unwrap();
-
-}
+mod common;
+use company_employees::common::Company;
 
 #[test]
 fn test_get_all_employees() {
     let mut company = Company::new();
-
-    Company::add_employee(&mut company, &"gary".to_string(), &"sales".to_string()).unwrap();
-    Company::add_employee(&mut company, &"aleks".to_string(), &"finance".to_string()).unwrap();
-    Company::add_employee(&mut company, &"aalesund".to_string(), &"finance".to_string()).unwrap();
+    
+    common::setup(&mut company);
 
     let all_employees = Company::get_employees(&mut company, "all".to_string()).unwrap();
 
@@ -34,10 +24,8 @@ fn test_get_all_employees() {
 #[test]
 fn test_get_dept_employees() {
     let mut company = Company::new();
-
-    Company::add_employee(&mut company, &"gary".to_string(), &"sales".to_string()).unwrap();
-    Company::add_employee(&mut company, &"aleks".to_string(), &"finance".to_string()).unwrap();
-    Company::add_employee(&mut company, &"aalesund".to_string(), &"finance".to_string()).unwrap();
+    
+    common::setup(&mut company);
 
     let dept_employees = Company::get_employees(&mut company, "finance".to_string()).unwrap();
 

@@ -1,8 +1,5 @@
-mod company;
-
-use company::common as common;
-use company::common::Company;
-
+use company_employees::common;
+use company_employees::common::Company;
 
 fn main() {
     let mut company = Company::new();

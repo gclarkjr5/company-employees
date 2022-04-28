@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use super::super::super::{Company};
+use super::super::common::{Company};
 
 #[cfg(test)]
 #[path="test_get.rs"]
@@ -17,9 +17,16 @@ impl Company {
     
     
         match department.as_str() {
-            "all" => Ok(
-                self.employee_list.to_owned()
-            ),
+            "all" => {
+                let _a = self.employee_list
+                    .iter_mut()
+                    .map(|(_k, v)| {
+                        v.sort()
+                    })
+                    .collect::<Vec<_>>();
+
+                Ok(self.employee_list.to_owned())
+            },
             _ => match self.employee_list.contains_key(&department) {
                 true => Ok(
                     get_dept_employees(self, department)
@@ -37,11 +44,13 @@ fn get_dept_employees(
     department: String
 ) -> HashMap<String, Vec<String>> {
     
-    let dept_employees: Vec<String> = company.employee_list
+    let mut dept_employees: Vec<String> = company.employee_list
         .iter()
         .filter_map(|(k,v)| if *k == department {Some(v.to_owned())} else {None})
         .flatten()
         .collect();
+
+    dept_employees.sort();
 
 
     let vec_dept = vec![(department, dept_employees)];

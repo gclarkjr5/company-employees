@@ -1,4 +1,4 @@
-use super::super::super::{Company};
+use super::super::common::{Company};
 
 #[cfg(test)]
 #[path="test_add.rs"]
@@ -22,7 +22,6 @@ impl Company {
                 },
                 false => {
                     x.push(employee_name.to_owned());
-                    x.sort();
                     Ok(self)
                 }
             },
