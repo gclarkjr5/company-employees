@@ -19,12 +19,16 @@ fn test_get_all_employees() {
         ("finance".to_string(), vec!["aleks".to_string(), "aalesund".to_string()])
     ];
 
-    let _a = employees
-        .iter()
-        .map(|(k, v)| {
-            company.employee_list.entry(k.to_string()).or_insert(v.to_vec());
-        })
-        .collect::<Vec<_>>();
+    // let _a = employees
+    //     .iter()
+    //     .map(|(k, v)| {
+    //         company.employee_list.entry(k.to_string()).or_insert(v.to_vec());
+    //     })
+    //     .collect::<Vec<_>>();
+
+    for (k, v) in employees.iter() {
+        company.employee_list.entry(k.to_string()).or_insert(v.to_vec());
+    }
 
 
     // let employee_hash = HashMap::from_iter(employees.to_iter());
@@ -58,12 +62,16 @@ fn test_get_dept_employees() {
         ("finance".to_string(), vec!["aleks".to_string(), "aalesund".to_string()])
     ];
 
-    let _a = employees
-        .iter()
-        .map(|(k, v)| {
-            company.employee_list.entry(k.to_string()).or_insert(v.to_vec());
-        })
-        .collect::<Vec<_>>();
+    // let _a = employees
+    //     .iter()
+    //     .map(|(k, v)| {
+    //         company.employee_list.entry(k.to_string()).or_insert(v.to_vec());
+    //     })
+    //     .collect::<Vec<_>>();
+
+    for (k, v) in employees.iter() {
+        company.employee_list.entry(k.to_string()).or_insert(v.to_vec());
+    }
 
     let dept_employees = Company::get_employees(&mut company, "finance".to_string()).unwrap();
 
