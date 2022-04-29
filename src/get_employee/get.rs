@@ -18,12 +18,10 @@ impl Company {
     
         match department.as_str() {
             "all" => {
-                let _a = self.employee_list
-                    .iter_mut()
-                    .map(|(_k, v)| {
-                        v.sort()
-                    })
-                    .collect::<Vec<_>>();
+
+                for (_k, v) in self.employee_list.iter_mut() {
+                    v.sort();
+                }
 
                 Ok(self.employee_list.to_owned())
             },
