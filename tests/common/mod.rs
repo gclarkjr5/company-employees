@@ -9,7 +9,7 @@ pub fn setup(company: &mut Company) -> &mut Company {
     ];
 
     for (k, v) in employees.iter() {
-        Company::add_employee(company, &k, &v).unwrap();
+        company.add_employee(&k, &v).unwrap();
     }
 
     company

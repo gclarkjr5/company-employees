@@ -5,7 +5,7 @@ fn test_add_employee() {
 
     let mut company = Company::new();
 
-    Company::add_employee(&mut company, &"gary".to_string(), &"sales".to_string()).unwrap();
+    company.add_employee(&"gary".to_string(), &"sales".to_string()).unwrap();
 
     assert_eq!(
         company.employee_list.get_key_value(&"sales".to_string()),
@@ -26,7 +26,7 @@ fn test_add_duplicate_employee_to_same_department() {
     ];
 
     for (k, v) in employees.iter() {
-        Company::add_employee(&mut company, &k, &v).unwrap();
+        company.add_employee(&k, &v).unwrap();
     }
 
 }
@@ -42,7 +42,7 @@ fn test_add_multiple_employees_same_department() {
     ];
 
     for (k, v) in employees.iter() {
-        Company::add_employee(&mut company, &k, &v).unwrap();
+        company.add_employee(&k, &v).unwrap();
     }
 
     assert_eq!(
@@ -62,7 +62,7 @@ fn test_add_multiple_employees_different_departments() {
     ];
 
     for (k, v) in employees.iter() {
-        Company::add_employee(&mut company, &k, &v).unwrap();
+        company.add_employee(&k, &v).unwrap();
     }
 
     assert_eq!(
