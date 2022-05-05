@@ -6,6 +6,9 @@ use super::super::common::{Company};
 mod test_get;
 
 impl Company {
+
+    /// retrieves employees either for each department in the company, or for only a particular
+    /// department
     pub fn get_employees(
         &mut self,
         department: String
@@ -36,7 +39,7 @@ impl Company {
 
 }
 
-
+/// helper function to get employees of a particular department
 fn get_dept_employees(
     company: &mut Company,
     department: String

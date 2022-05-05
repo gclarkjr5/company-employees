@@ -5,6 +5,8 @@ use super::super::common::{Company};
 mod test_add;
 
 impl Company {
+
+    /// adds an employee+department combo for the company if it doesn't already exist
     pub fn add_employee(
         &mut self,
         employee_name: &String,
