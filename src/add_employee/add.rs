@@ -7,6 +7,24 @@ mod test_add;
 impl Company {
 
     /// adds an employee+department combo for the company if it doesn't already exist
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// use company_employees::common::Company;
+    /// 
+    /// let mut company = Company::new();
+    /// 
+    /// let name = "employee".to_string();
+    /// let department = "sales".to_string();
+    /// 
+    /// company.add_employee(&name, &department);
+    /// 
+    /// assert_eq!(
+    ///     company.employee_list.get_key_value(&department),
+    ///     Some((&department, &vec![name]))
+    /// )
+    /// ```
     pub fn add_employee(
         &mut self,
         employee_name: &String,

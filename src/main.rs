@@ -31,7 +31,7 @@ fn main() {
             "get" => {
                 let input = common::read_input("Which department of employees do you want to get? Type 'all' if you want all employees in the company.");
                 
-                let employees = Company::get_employees(&mut company, input);
+                let employees = Company::get_employees(&mut company, &input);
 
                 match employees {
                     Ok(i) => {

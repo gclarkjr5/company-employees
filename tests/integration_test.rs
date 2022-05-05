@@ -7,7 +7,7 @@ fn test_get_all_employees() {
     
     common::setup(&mut company);
 
-    let all_employees = company.get_employees("all".to_string()).unwrap();
+    let all_employees = company.get_employees(&"all".to_string()).unwrap();
 
     assert_eq!(
         (
@@ -27,7 +27,7 @@ fn test_get_dept_employees() {
     
     common::setup(&mut company);
 
-    let dept_employees = company.get_employees("finance".to_string()).unwrap();
+    let dept_employees = company.get_employees(&"finance".to_string()).unwrap();
 
     assert_eq!(
         dept_employees.get_key_value(&"finance".to_string()),
