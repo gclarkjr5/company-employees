@@ -2,10 +2,13 @@ use company_employees::common;
 use company_employees::common::Company;
 
 fn main() {
+
+    // create empty company
     let mut company = Company::new();
 
     let mut output: &'static str = "";
 
+    // run loop on inputs until encountering "end" to end operations
     while output != "end" {
 
         let input = common::read_input("What would you like to do? Add/Get an employee/s or End operations [add/get/end]");
