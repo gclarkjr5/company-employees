@@ -32,12 +32,12 @@ impl Company {
     pub fn get_employees(
         &mut self,
         department: &String
-    ) -> Result<HashMap<String, Vec<String>>, &'static str> {
+    ) -> Result<HashMap<String, Vec<String>>, String> {
     
         if self.employee_list.is_empty() {
-            return Err("No employees have been added to the company yet.")
+            let msg = "No employees have been added to the company yet.".to_string();
+            return Err(msg)
         }
-    
     
         match department.as_str() {
             "all" => {
@@ -48,9 +48,12 @@ impl Company {
 
                 Ok(self.employee_list.to_owned())
             },
-            _ => match self.employee_list.contains_key(department) {
-                true => Ok(get_dept_employees(self, department)),
-                false => Err("Department doesnt exist")
+            _ => match self.employee_list.contains_key(&*department) {
+                true => Ok(get_dept_employees(self, &department)), // Ok(get_dept_employees(self, department)),
+                false => {
+                    let msg = format!("The {} department doesn't exist", department);
+                    Err(msg)
+                 } 
             }
         }
     }

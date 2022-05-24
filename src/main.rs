@@ -1,63 +1,126 @@
-use company_employees::common;
+use std::fs::File;
+use clap::{Parser, Subcommand, CommandFactory, ErrorKind};
+
 use company_employees::common::Company;
+
+/// An application to add employees to a company and also see who exists
+#[derive(Parser)]
+#[clap(author, about, long_about = None)]
+struct Cli {
+    /// The operation to perform on the company
+    #[clap(subcommand)]
+    command: Commands,
+}
+
+#[derive(Subcommand)]
+enum Commands {
+    /// add an employee & department combo to the company if it doesn't already exist
+    Add {
+        
+        /// Name of the employee to add
+        name: String,
+
+        /// Department that the employee works in
+        department: String
+    },
+
+    /// get the employees of a department
+    // #[clap(arg_enum)]
+    Get {
+
+        /// return all employees from the company by department
+        #[clap(long)]
+        all: bool,
+
+        /// get the employees of a specific department
+        #[clap(short, long)]
+        department: Option<String>
+    },
+
+    /// clear the entire company
+    Clear,
+}
 
 fn main() {
 
-    // create empty company
-    let mut company = Company::new();
+    // parse the cli args
+    let cli = Cli::parse();
 
-    let mut output: &'static str = "";
+    // create company from existing file
+    let mut company = Company::init();
 
-    // run loop on inputs until encountering "end" to end operations
-    while output != "end" {
+    // get the subcommand from the cli and execute it
+    match &cli.command {
+        Commands::Add {name, department} => {
 
-        let input = common::read_input("What would you like to do? Add/Get an employee/s or End operations [add/get/end]");
-
-        if let Err(e) = common::parsed_action(&input) {
-            eprintln!("{}", e);
-        }
-
-        output = match input.as_str() {
-            "add" => {
-                let employee_name = common::read_input("What is the name of the employee to add?");
-                let employee_dept = common::read_input("What is the department they are a part of?");
-
-
-                if let Err(e) = Company::add_employee(&mut company, &employee_name, &employee_dept) {
-                    println!("{}", e);
+            match company.add_employee(name, department) {
+                Ok(c) => {
+                    c.save();
+                    println!("{} has been added to the {} department.", name, department)
+                },
+                Err(e) => {
+                    let mut cmd = Cli::command();
+                    cmd.error(
+                        ErrorKind::ValueValidation,
+                        e,
+                    )
+                    .exit();
                 }
+            }
+        },
+        Commands::Get {all, department} => {
 
-                println!("{} has been added to the {} department.", employee_name, employee_dept);
+            if *all {
 
-                "add"
-            },
-            "get" => {
-                let input = common::read_input("Which department of employees do you want to get? Type 'all' if you want all employees in the company.");
-                
-                let employees = Company::get_employees(&mut company, &input);
-
-                match employees {
-                    Ok(i) => {
-                        let mut keys: Vec<_> = i.keys().collect();
-
-                        keys.sort();
-
-                        for key in keys {
-                            let mut emps = i.get(key).unwrap().to_owned();
-
-                            emps.sort();
-
-                            println!("For the {} department the following employees exist: {}", key, emps.join(", "));
-
-                        }
+                match company.get_employees(&"all".to_string()) {
+                    Ok(employees) => {
+                        company.format_employees(&employees)
                     },
-                    Err(e) => eprintln!("{}", e),
+                    Err(e) => {
+                        let mut cmd = Cli::command();
+                        cmd.error(
+                            ErrorKind::ValueValidation,
+                            e,
+                        )
+                        .exit();
+                    }
                 }
 
-                "get"
-            },
-            "end" => "end",
-            _ => "not possible"
-        };   
-    }
+            } else {
+                if let Some(dept) = department {
+                    match company.get_employees(dept) {
+                        Ok(employees) => {
+                            company.format_employees(&employees)
+                        },
+                        Err(e) => {
+                            let mut cmd = Cli::command();
+                            cmd.error(
+                                ErrorKind::ValueValidation,
+                                e,
+                            )
+                            .exit();
+                        }
+                    }
+                } else {
+                    let mut cmd = Cli::command();
+                    cmd.error(
+                        ErrorKind::EmptyValue,
+                        "No value provided for the department which is required if not getting all.",
+                    )
+                    .exit();
+                } 
+            }
+        },
+        Commands::Clear => {
+
+            let file = File::create("company.json").unwrap();
+
+            let fresh = Company::new();
+
+            serde_json::to_writer(file, &fresh).unwrap();
+
+            println!("Cleared the company")
+        },
+    };  
+
 }

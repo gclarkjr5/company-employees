@@ -18,7 +18,7 @@ impl Company {
     /// let name = "employee".to_string();
     /// let department = "sales".to_string();
     /// 
-    /// company.add_employee(&name, &department);
+    /// company.add_employee(&name, &department).unwrap();
     /// 
     /// assert_eq!(
     ///     company.employee_list.get_key_value(&department),
@@ -29,7 +29,7 @@ impl Company {
         &mut self,
         employee_name: &String,
         employee_dept: &String
-    ) -> Result<&mut Company, &'static str> {
+    ) -> Result<&mut Company, String> {
         
         // check if employee exists
         let department_employees = self.employee_list.get_mut(employee_dept);
@@ -38,7 +38,8 @@ impl Company {
         match department_employees {
             Some(x) => match x.contains(&employee_name) {
                 true => {
-                    Err("The employee {} already exists for the {} department")
+                    let msg = format!("The employee {} already exists for the {} department", employee_name, employee_dept);
+                    Err(msg)
                 },
                 false => {
                     x.push(employee_name.to_owned());

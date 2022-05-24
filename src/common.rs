@@ -1,9 +1,12 @@
+use std::fs::File;
+use serde::{Serialize, Deserialize};
 use std::collections::HashMap;
+
 
 
 /// A company with a list of departments and the employees that work in those
 /// departments.
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Company {
 
     /// key-value pairs where keys are the departments of the company, and the value is a vector of employee
@@ -11,43 +14,73 @@ pub struct Company {
     pub employee_list: HashMap<String, Vec<String>>
 }
 
+
 impl Company {
 
     /// instantiates a new company with no employees in it
     pub fn new() -> Company {
-            Company {
-                employee_list: HashMap::new()
-            }
-    }
-}
 
-/// asks a question to the user at the CLI and ingests the response
-pub fn read_input(message: &'static str) -> String {
-
-    println!("{}", message);
-
-    let mut input = String::new();
-
-    if let Err(e) = std::io::stdin().read_line(&mut input) {
-        println!("{}", e)
-    }
+        Company {
+            employee_list: HashMap::new()
+        }
         
-    input.trim().to_lowercase()
-
-}
-
-/// make sure that the input from the user is one of "add", "get", or "end"
-pub fn parsed_action(action: &String) -> Result<&String, &'static str> {
-
-    let action_options = vec![
-        "add",
-        "get",
-        "end"
-    ];
-
-    match action_options.contains(&action.as_str()) {
-        true => Ok(action),
-        false => Err("The options must be 'add', 'get' or 'end'. Please try again.")
     }
 
+    /// reads in the current Company data if it exists
+    /// if not it will create a new empty one
+    pub fn init() -> Company {
+
+        let file = File::open("company.json");
+
+        match file {
+            Ok(data) => {
+
+                let company: Company = serde_json::from_reader(data).unwrap();
+
+                company
+
+            },
+            Err(_) => {
+                let file = File::create("company.json").unwrap();
+
+                let company = Company::new();
+
+                serde_json::to_writer(file, &company).unwrap();
+
+                company
+            }
+        }
+    }
+
+    pub fn format_employees(&self, employees: &HashMap<String, Vec<String>>) {
+        let mut keys: Vec<_> = employees.keys().collect();
+        keys.sort();
+
+        // let e: HashMap<_, Vec<_>> = employees
+        //     .iter()
+        //     .map(|(_, val)| val.sort())
+        //     .collect();
+
+        // keys
+        //     .iter()
+        //     .for_each(|key| {
+        //         let emps = employees.get(*key).unwrap().to_owned();
+        //         println!("For the {} department the following employees exist: {}", key, emps.join(", "));
+        //     });
+
+
+        for key in keys {
+            let mut emps = employees.get(key).unwrap().to_owned();
+            emps.sort();
+            println!("For the {} department the following employees exist: {}", key, emps.join(", "));
+        }
+    }
+
+    pub fn save(&self) {
+
+        let file = File::create("company.json").unwrap();
+
+        serde_json::to_writer(file, self).unwrap();
+
+    }
 }
