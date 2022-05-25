@@ -52,28 +52,12 @@ impl Company {
         }
     }
 
-    pub fn format_employees(&self, employees: &HashMap<String, Vec<String>>) {
-        let mut keys: Vec<_> = employees.keys().collect();
-        keys.sort();
+    pub fn clear(&self) {
+        let file = File::create("company.json").unwrap();
 
-        // let e: HashMap<_, Vec<_>> = employees
-        //     .iter()
-        //     .map(|(_, val)| val.sort())
-        //     .collect();
+        let fresh = Company::new();
 
-        // keys
-        //     .iter()
-        //     .for_each(|key| {
-        //         let emps = employees.get(*key).unwrap().to_owned();
-        //         println!("For the {} department the following employees exist: {}", key, emps.join(", "));
-        //     });
-
-
-        for key in keys {
-            let mut emps = employees.get(key).unwrap().to_owned();
-            emps.sort();
-            println!("For the {} department the following employees exist: {}", key, emps.join(", "));
-        }
+        serde_json::to_writer(file, &fresh).unwrap();
     }
 
     pub fn save(&self) {

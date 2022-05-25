@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use super::super::common::{Company};
+use itertools::Itertools;
 
 #[cfg(test)]
 #[path="test_get.rs"]
@@ -17,64 +17,70 @@ impl Company {
     /// 
     /// let mut company = Company::new();
     /// 
-    /// let name = "employee".to_string();
-    /// let department = "sales".to_string();
     /// 
-    /// company.add_employee(&name, &department);
+    /// company.employee_list.insert("sales".to_string(), vec!["employee".to_string()]);
     /// 
-    /// let dept_employees = company.get_employees(&department).unwrap(); 
+    /// let dept_employees = company.get_employees(&false, &Some("sales".to_string())).unwrap(); 
     /// 
     /// assert_eq!(
-    ///     dept_employees.get_key_value(&department),
-    ///     Some((&department ,&vec![name]))
+    ///     dept_employees.employee_list.get_key_value(&"sales".to_string()),
+    ///     Some((&"sales".to_string() ,&vec!["employee".to_string()]))
     /// )
     /// ```
     pub fn get_employees(
         &mut self,
-        department: &String
-    ) -> Result<HashMap<String, Vec<String>>, String> {
-    
+        all_bool: &bool,
+        department: &Option<String>
+    ) -> Result<Company, String> {
+
         if self.employee_list.is_empty() {
             let msg = "No employees have been added to the company yet.".to_string();
+
             return Err(msg)
         }
-    
-        match department.as_str() {
-            "all" => {
 
-                for (_k, v) in self.employee_list.iter_mut() {
-                    v.sort();
-                }
+        if *all_bool {
 
-                Ok(self.employee_list.to_owned())
-            },
-            _ => match self.employee_list.contains_key(&*department) {
-                true => Ok(get_dept_employees(self, &department)), // Ok(get_dept_employees(self, department)),
+            let mut sorted_company = Company::new();
+
+            self.employee_list
+                .iter_mut()
+                .sorted()
+                .for_each(|(d, employees)| {
+                    employees.sort();
+                    sorted_company.employee_list.insert(d.to_owned(), employees.to_owned());
+                });
+
+            return Ok(
+                sorted_company
+            )
+
+        } else {
+
+            let dept = department.to_owned().unwrap();
+
+            match self.employee_list.contains_key(&dept) {
+                true => {
+
+                    let mut filtered_company = Company::new();
+
+                    self.employee_list
+                        .iter_mut()
+                        .filter(|(d, _)| **d == dept)
+                        .for_each(|(d, employees)| {
+                            employees.sort();
+                            filtered_company.employee_list.insert(d.to_owned(), employees.to_owned());
+                        });
+
+                    return Ok(
+                        filtered_company
+                    )
+                },
                 false => {
-                    let msg = format!("The {} department doesn't exist", department);
-                    Err(msg)
-                 } 
+                    let msg = format!("The {dept} department doesn't exist");
+                    return Err(msg)
+                }
             }
         }
     }
-
-}
-
-/// helper function to get employees of a particular department
-fn get_dept_employees(
-    company: &mut Company,
-    department: &String
-) -> HashMap<String, Vec<String>> {
-    
-    let mut dept_employees: Vec<String> = company.employee_list
-        .iter()
-        .filter_map(|(k,v)| if k == department {Some(v.to_owned())} else {None})
-        .flatten()
-        .collect();
-
-    dept_employees.sort();
-
-    let vec_dept = vec![(department.to_owned(), dept_employees)];
-
-    HashMap::from_iter(vec_dept)
 }

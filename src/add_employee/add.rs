@@ -29,7 +29,7 @@ impl Company {
         &mut self,
         employee_name: &String,
         employee_dept: &String
-    ) -> Result<&mut Company, String> {
+    ) -> Result<&Company, String> {
         
         // check if employee exists
         let department_employees = self.employee_list.get_mut(employee_dept);

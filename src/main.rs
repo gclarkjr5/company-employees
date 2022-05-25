@@ -1,6 +1,4 @@
-use std::fs::File;
 use clap::{Parser, Subcommand, CommandFactory, ErrorKind};
-
 use company_employees::common::Company;
 
 /// An application to add employees to a company and also see who exists
@@ -56,7 +54,7 @@ fn main() {
             match company.add_employee(name, department) {
                 Ok(c) => {
                     c.save();
-                    println!("{} has been added to the {} department.", name, department)
+                    println!("{name} has been added to the {department} department.")
                 },
                 Err(e) => {
                     let mut cmd = Cli::command();
@@ -69,55 +67,36 @@ fn main() {
             }
         },
         Commands::Get {all, department} => {
-
-            if *all {
-
-                match company.get_employees(&"all".to_string()) {
-                    Ok(employees) => {
-                        company.format_employees(&employees)
-                    },
-                    Err(e) => {
-                        let mut cmd = Cli::command();
-                        cmd.error(
-                            ErrorKind::ValueValidation,
-                            e,
-                        )
-                        .exit();
-                    }
-                }
-
-            } else {
-                if let Some(dept) = department {
-                    match company.get_employees(dept) {
-                        Ok(employees) => {
-                            company.format_employees(&employees)
-                        },
-                        Err(e) => {
-                            let mut cmd = Cli::command();
-                            cmd.error(
-                                ErrorKind::ValueValidation,
-                                e,
-                            )
-                            .exit();
-                        }
-                    }
-                } else {
-                    let mut cmd = Cli::command();
+            if !*all && department.is_none() {
+                let mut cmd = Cli::command();
                     cmd.error(
-                        ErrorKind::EmptyValue,
-                        "No value provided for the department which is required if not getting all.",
+                        ErrorKind::ValueValidation,
+                        "Either --all or --department must be defined",
                     )
                     .exit();
-                } 
             }
+            
+            match company.get_employees(all, department) {
+                Ok(c) => {
+                    for (dept, employees) in c.employee_list.iter() {
+                        let employees_string = employees.join(", ");
+                        println!("For the {dept} department the following employees exist: {employees_string}");
+                    }
+                },
+                Err(e) => {
+                    let mut cmd = Cli::command();
+                    cmd.error(
+                        ErrorKind::ValueValidation,
+                        e,
+                    )
+                    .exit();
+                }
+            }
+
         },
         Commands::Clear => {
 
-            let file = File::create("company.json").unwrap();
-
-            let fresh = Company::new();
-
-            serde_json::to_writer(file, &fresh).unwrap();
+            company.clear();
 
             println!("Cleared the company")
         },

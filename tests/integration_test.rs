@@ -7,12 +7,12 @@ fn test_get_all_employees() {
     
     common::setup(&mut company);
 
-    let all_employees = company.get_employees(&"all".to_string()).unwrap();
+    let all_employees = company.get_employees(&true, &None).unwrap();
 
     assert_eq!(
         (
-            all_employees.get_key_value(&"sales".to_string()),
-            all_employees.get_key_value(&"finance".to_string())
+            all_employees.employee_list.get_key_value(&"sales".to_string()),
+            all_employees.employee_list.get_key_value(&"finance".to_string())
         ),
         (
             Some((&"sales".to_string(),&vec!["gary".to_string()])),
@@ -27,10 +27,10 @@ fn test_get_dept_employees() {
     
     common::setup(&mut company);
 
-    let dept_employees = company.get_employees(&"finance".to_string()).unwrap();
+    let dept_employees = company.get_employees(&false, &Some("finance".to_string())).unwrap();
 
     assert_eq!(
-        dept_employees.get_key_value(&"finance".to_string()),
+        dept_employees.employee_list.get_key_value(&"finance".to_string()),
         Some((&"finance".to_string(),&vec!["aalesund".to_string(), "aleks".to_string()]))
     )
 }
