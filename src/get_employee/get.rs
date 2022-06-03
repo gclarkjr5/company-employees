@@ -1,5 +1,6 @@
 use super::super::common::{Company};
 use itertools::Itertools;
+use tokio::io::{self, Error, ErrorKind};
 
 #[cfg(test)]
 #[path="test_get.rs"]
@@ -27,21 +28,21 @@ impl Company {
     ///     Some((&"sales".to_string() ,&vec!["employee".to_string()]))
     /// )
     /// ```
-    pub fn get_employees(
+    pub async fn get_employees(
         &mut self,
         all_bool: &bool,
         department: &Option<String>
-    ) -> Result<Company, String> {
+    ) -> io::Result<Company> {
 
         if self.employee_list.is_empty() {
             let msg = "No employees have been added to the company yet.".to_string();
-
-            return Err(msg)
+            let error_string = Error::new(ErrorKind::Other, msg);
+            return Err(error_string)
         }
 
         if *all_bool {
 
-            let mut sorted_company = Company::new();
+            let mut sorted_company = Company::new().await?;
 
             self.employee_list
                 .iter_mut()
@@ -62,7 +63,7 @@ impl Company {
             match self.employee_list.contains_key(&dept) {
                 true => {
 
-                    let mut filtered_company = Company::new();
+                    let mut filtered_company = Company::new().await?;
 
                     self.employee_list
                         .iter_mut()
@@ -78,7 +79,8 @@ impl Company {
                 },
                 false => {
                     let msg = format!("The {dept} department doesn't exist");
-                    return Err(msg)
+                    let error_string = Error::new(ErrorKind::Other, msg);
+                    return Err(error_string)
                 }
             }
         }

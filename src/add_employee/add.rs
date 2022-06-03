@@ -1,4 +1,5 @@
 use super::super::common::{Company};
+use tokio::io::{self, Error, ErrorKind};
 
 #[cfg(test)]
 #[path="test_add.rs"]
@@ -25,21 +26,21 @@ impl Company {
     ///     Some((&department, &vec![name]))
     /// )
     /// ```
-    pub fn add_employee(
+    pub async fn add_employee(
         &mut self,
         employee_name: &String,
         employee_dept: &String
-    ) -> Result<&Company, String> {
+    ) -> io::Result<&Company> {
         
         // check if employee exists
         let department_employees = self.employee_list.get_mut(employee_dept);
         
-    
         match department_employees {
             Some(x) => match x.contains(&employee_name) {
                 true => {
                     let msg = format!("The employee {} already exists for the {} department", employee_name, employee_dept);
-                    Err(msg)
+                    let error_string = Error::new(ErrorKind::Other, msg);
+                    Err(error_string)
                 },
                 false => {
                     x.push(employee_name.to_owned());
