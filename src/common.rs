@@ -3,10 +3,7 @@ use tokio::io::{self, AsyncReadExt, AsyncWriteExt};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::str;
-// use std::sync::{Arc, Mutex}; // consider using parking_lot::Mutex for optimizations
 
-
-// type Db = Arc<Mutex<Company>>;
 
 /// A company with a list of departments and the employees that work in those
 /// departments.

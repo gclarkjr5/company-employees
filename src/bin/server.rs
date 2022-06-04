@@ -1,22 +1,38 @@
 use tokio::net::TcpListener;
-// use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use tokio::io::{self, AsyncReadExt, AsyncWriteExt, Error, ErrorKind};
+use tokio::sync::Mutex;
 use std::str;
 mod client;
 use client::Commands;
 use company_employees::common::Company;
 
-// type Db = Arc<Mutex<Company>>;
+type Db = Arc<Mutex<Company>>;
 
 #[tokio::main]
 async fn main() -> io::Result<()> {
 
     let listener = TcpListener::bind("127.0.0.1:6379").await?;
 
+    let company = match Company::init().await {
+        Ok(c) => c,
+        Err(e) => {
+            eprintln!("Error: {e}");
+            // let error_string = format!("Error: {}", e.to_string());
+            // let r: &[u8] = error_string.as_bytes();
+            // wr.write_all(r).await?;
+            return Err(e)
+        }
+    };
+
+    let db = Arc::new(Mutex::new(company));
+
     loop {
         let (socket, _) = listener.accept().await?;
 
         let (mut rd, mut wr) = io::split(socket);
+
+        let db = db.clone();
 
         tokio::spawn(async move {
 
@@ -25,17 +41,6 @@ async fn main() -> io::Result<()> {
             rd.read_to_end(&mut buffer).await?;
 
             let command_str = str::from_utf8(&mut buffer).unwrap();
-
-            let mut company = match Company::init().await {
-                Ok(c) => c,
-                Err(e) => {
-                    eprintln!("Error: {e}");
-                    let error_string = format!("Error: {}", e.to_string());
-                    let r: &[u8] = error_string.as_bytes();
-                    wr.write_all(r).await?;
-                    return Err(e)
-                }
-            };
 
             let command: Commands = match serde_json::from_str(&command_str) {
                 Ok(data) => data,
@@ -47,7 +52,7 @@ async fn main() -> io::Result<()> {
                 }
             };
 
-            match process_command(command, &mut company).await {
+            match process_command(command, db).await {
                 Ok(msg) => {
                     println!("{msg}");
                     let r: &[u8] = msg.as_bytes();
@@ -67,11 +72,13 @@ async fn main() -> io::Result<()> {
     }
 }
 
-async fn process_command(command: Commands, company: &mut Company) -> io::Result<String> {
+async fn process_command(command: Commands, db: Db) -> io::Result<String> {
 
     // get the subcommand from the cli and execute it
     match &command {
         Commands::Add {name, department} => {
+
+            let mut company = db.lock().await;
 
             match company.add_employee(name, department).await {
                 Ok(company) => {
@@ -91,6 +98,8 @@ async fn process_command(command: Commands, company: &mut Company) -> io::Result
                 let msg = Error::new(ErrorKind::Other, "Either --all or --department must be defined for a GET command");
                 return Err(msg)
             }
+
+            let mut company = db.lock().await;
             
             match company.get_employees(all, department).await {
                 Ok(c) => {
@@ -110,6 +119,9 @@ async fn process_command(command: Commands, company: &mut Company) -> io::Result
             }
         },
         Commands::Clear => {
+
+            let company = db.lock().await;
+
             match company.clear().await {
                 Ok(_) => {
                     return Ok("company cleared".to_string())
