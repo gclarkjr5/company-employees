@@ -1,5 +1,4 @@
 use super::super::common::{Company};
-use itertools::Itertools;
 use tokio::io::{self, Error, ErrorKind};
 
 #[cfg(test)]
@@ -10,26 +9,9 @@ impl Company {
 
     /// retrieves employees either for each department in the company, or for only a particular
     /// department
-    /// 
-    /// Example
-    /// 
-    /// ```
-    /// use company_employees::common::Company;
-    /// 
-    /// let mut company = Company::new();
-    /// 
-    /// 
-    /// company.employee_list.insert("sales".to_string(), vec!["employee".to_string()]);
-    /// 
-    /// let dept_employees = company.get_employees(&false, &Some("sales".to_string())).unwrap(); 
-    /// 
-    /// assert_eq!(
-    ///     dept_employees.employee_list.get_key_value(&"sales".to_string()),
-    ///     Some((&"sales".to_string() ,&vec!["employee".to_string()]))
-    /// )
-    /// ```
+
     pub async fn get_employees(
-        &mut self,
+        &self,
         all_bool: &bool,
         department: &Option<String>
     ) -> io::Result<Company> {
@@ -42,18 +24,18 @@ impl Company {
 
         if *all_bool {
 
-            let mut sorted_company = Company::new().await?;
+            let mut company = Company::new().await?;
 
             self.employee_list
-                .iter_mut()
-                .sorted()
+                .iter()
                 .for_each(|(d, employees)| {
-                    employees.sort();
-                    sorted_company.employee_list.insert(d.to_owned(), employees.to_owned());
+                    let mut e = employees.to_owned();
+                    e.sort();
+                    company.employee_list.insert(d.to_owned(), e);
                 });
 
             return Ok(
-                sorted_company
+                company
             )
 
         } else {
@@ -66,11 +48,12 @@ impl Company {
                     let mut filtered_company = Company::new().await?;
 
                     self.employee_list
-                        .iter_mut()
+                        .iter()
                         .filter(|(d, _)| **d == dept)
                         .for_each(|(d, employees)| {
-                            employees.sort();
-                            filtered_company.employee_list.insert(d.to_owned(), employees.to_owned());
+                            let mut e = employees.to_owned();
+                            e.sort();
+                            filtered_company.employee_list.insert(d.to_owned(), e);
                         });
 
                     return Ok(

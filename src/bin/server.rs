@@ -18,9 +18,6 @@ async fn main() -> io::Result<()> {
         Ok(c) => c,
         Err(e) => {
             eprintln!("Error: {e}");
-            // let error_string = format!("Error: {}", e.to_string());
-            // let r: &[u8] = error_string.as_bytes();
-            // wr.write_all(r).await?;
             return Err(e)
         }
     };
@@ -81,9 +78,10 @@ async fn process_command(command: Commands, db: Db) -> io::Result<String> {
             let mut company = db.lock().await;
 
             match company.add_employee(name, department).await {
-                Ok(company) => {
+                Ok(c) => {
+                    println!("{:?}", c);
                     let msg = format!("{name} has been added to the {department} department.");
-                    company.save().await?;
+                    c.save().await?;
                     return Ok(msg)
                 },
                 Err(e) => {
@@ -91,6 +89,7 @@ async fn process_command(command: Commands, db: Db) -> io::Result<String> {
                     return Err(msg)
                 }
             }
+
         },
         Commands::Get {all, department} => {
 
@@ -99,10 +98,11 @@ async fn process_command(command: Commands, db: Db) -> io::Result<String> {
                 return Err(msg)
             }
 
-            let mut company = db.lock().await;
+            let company = db.lock().await;
             
             match company.get_employees(all, department).await {
                 Ok(c) => {
+                    println!("{:?}", c);
                     let mut string_vec = vec![];
                     for (dept, employees) in c.employee_list.iter() {
                         let employees_string = employees.join(", ");
@@ -120,7 +120,7 @@ async fn process_command(command: Commands, db: Db) -> io::Result<String> {
         },
         Commands::Clear => {
 
-            let company = db.lock().await;
+            let mut company = db.lock().await;
 
             match company.clear().await {
                 Ok(_) => {

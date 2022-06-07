@@ -1,16 +1,26 @@
-use company_employees::common::Company;
+// use company_employees::common::Company;
+use tokio::io;
+use assert_cmd::Command;
 
-pub fn setup(company: &mut Company) -> &mut Company {
 
-    let employees = vec![
-        ("gary".to_string(), "sales".to_string()),
-        ("aleks".to_string(), "finance".to_string()),
-        ("aalesund".to_string(), "finance".to_string())
-    ];
 
-    for (k, v) in employees.iter() {
-        company.add_employee(&k, &v).unwrap();
-    }
+pub async fn setup() -> io::Result<()> {
 
-    company
+    Command::new("cargo")
+        .args(&["run", "--bin", "server"])
+        .unwrap();
+
+    Ok(())
+
+    // let employees = vec![
+    //     ("gary".to_string(), "sales".to_string()),
+    //     ("aleks".to_string(), "finance".to_string()),
+    //     ("aalesund".to_string(), "finance".to_string())
+    // ];
+
+    // for (k, v) in employees.iter() {
+    //     company.add_employee(&k, &v).await.unwrap();
+    // }
+
+    // Ok(company)
 }

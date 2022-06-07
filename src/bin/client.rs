@@ -3,9 +3,6 @@ use tokio::net::TcpStream;
 use serde::{Deserialize, Serialize};
 use clap::{Parser, Subcommand, CommandFactory, ErrorKind};
 use std::str;
-// use tokio::sync::mpsc;
-
-// use company_employees::common::Company;
 
 /// An application to add employees to a company and also see who exists
 #[derive(Parser)]
