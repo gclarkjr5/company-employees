@@ -1,11 +1,17 @@
 use super::super::super::common::Company;
 
-#[test]
-fn test_add_employee() {
+#[tokio::test]
+async fn test_add_employee() {
 
-    let mut company = Company::new();
+    let mut company = Company::new().await.unwrap();
 
-    company.add_employee(&"gary".to_string(), &"sales".to_string()).unwrap();
+    let employees = vec![
+        ("gary".to_string(), "sales".to_string())
+    ];
+
+    for (k, v) in employees.iter() {
+        company.add_employee(&k, &v).await.unwrap();
+    }
 
     assert_eq!(
         company.employee_list.get_key_value(&"sales".to_string()),
@@ -14,11 +20,11 @@ fn test_add_employee() {
 
 }
 
-#[test]
+#[tokio::test]
 #[should_panic]
-fn test_add_duplicate_employee_to_same_department() {
+async fn test_add_duplicate_employee_to_same_department() {
 
-    let mut company = Company::new();
+    let mut company = Company::new().await.unwrap();
 
     let employees = vec![
         ("gary".to_string(), "sales".to_string()),
@@ -26,15 +32,15 @@ fn test_add_duplicate_employee_to_same_department() {
     ];
 
     for (k, v) in employees.iter() {
-        company.add_employee(&k, &v).unwrap();
+        company.add_employee(&k, &v).await.unwrap();
     }
 
 }
 
 
-#[test]
-fn test_add_multiple_employees_same_department() {
-    let mut company = Company::new();
+#[tokio::test]
+async fn test_add_multiple_employees_same_department() {
+    let mut company = Company::new().await.unwrap();
 
     let employees = vec![
         ("gary".to_string(), "sales".to_string()),
@@ -42,7 +48,7 @@ fn test_add_multiple_employees_same_department() {
     ];
 
     for (k, v) in employees.iter() {
-        company.add_employee(&k, &v).unwrap();
+        company.add_employee(&k, &v).await.unwrap();
     }
 
     assert_eq!(
@@ -51,9 +57,9 @@ fn test_add_multiple_employees_same_department() {
     )
 }
 
-#[test]
-fn test_add_multiple_employees_different_departments() {
-    let mut company = Company::new();
+#[tokio::test]
+async fn test_add_multiple_employees_different_departments() {
+    let mut company = Company::new().await.unwrap();
 
     let employees = vec![
         ("gary".to_string(), "sales".to_string()),
@@ -62,7 +68,7 @@ fn test_add_multiple_employees_different_departments() {
     ];
 
     for (k, v) in employees.iter() {
-        company.add_employee(&k, &v).unwrap();
+        company.add_employee(&k, &v).await.unwrap();
     }
 
     assert_eq!(

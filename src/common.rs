@@ -1,7 +1,8 @@
-use std::fs::File;
-use serde::{Serialize, Deserialize};
+use tokio::fs;
+use tokio::io;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-
+use std::str;
 
 
 /// A company with a list of departments and the employees that work in those
@@ -18,53 +19,57 @@ pub struct Company {
 impl Company {
 
     /// instantiates a new company with no employees in it
-    pub fn new() -> Company {
+    pub async fn new() -> io::Result<Company> {
+        let company = Company {employee_list: HashMap::new()};
 
-        Company {
-            employee_list: HashMap::new()
-        }
-        
+        Ok(company)
     }
 
-    /// reads in the current Company data if it exists
-    /// if not it will create a new empty one
-    pub fn init() -> Company {
+    // reads in the current Company data if it exists
+    // if not it will create a new empty one
+    pub async fn init() -> io::Result<Company> {
 
-        let file = File::open("company.json");
-
-        match file {
-            Ok(data) => {
-
-                let company: Company = serde_json::from_reader(data).unwrap();
-
-                company
-
-            },
+        let contents = match fs::read("company.json").await {
+            Ok(f) => f,
             Err(_) => {
-                let file = File::create("company.json").unwrap();
+                println!("No storage for company. Creating a new one.");
 
-                let company = Company::new();
+                let new_company = Company::new().await?;
 
-                serde_json::to_writer(file, &company).unwrap();
+                let company = serde_json::to_vec(&new_company).unwrap();
 
-                company
+                fs::write("company.json", &company).await?;
+
+                fs::read("company.json").await?
             }
-        }
+        };
+
+        let string_content = str::from_utf8(&contents).unwrap();
+        let company: Company = serde_json::from_str(&string_content).unwrap();
+
+        Ok(company)
     }
 
-    pub fn clear(&self) {
-        let file = File::create("company.json").unwrap();
+    pub async fn clear(&mut self) -> io::Result<&mut Company> {
 
-        let fresh = Company::new();
+        self.employee_list.clear();
 
-        serde_json::to_writer(file, &fresh).unwrap();
+        let company = serde_json::to_vec(&self).unwrap();
+
+        fs::write("company.json", &company).await?;
+
+        Ok(self)
     }
 
-    pub fn save(&self) {
+    pub async fn save(&self) -> io::Result<&Company> {
 
-        let file = File::create("company.json").unwrap();
+        let company = serde_json::to_vec(&self).unwrap();
 
-        serde_json::to_writer(file, self).unwrap();
+        fs::write("company.json", &company).await?;
+
+        println!("company saved");
+
+        Ok(self)
 
     }
 }

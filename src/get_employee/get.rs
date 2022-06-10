@@ -1,5 +1,5 @@
 use super::super::common::{Company};
-use itertools::Itertools;
+use tokio::io::{self, Error, ErrorKind};
 
 #[cfg(test)]
 #[path="test_get.rs"]
@@ -9,50 +9,33 @@ impl Company {
 
     /// retrieves employees either for each department in the company, or for only a particular
     /// department
-    /// 
-    /// Example
-    /// 
-    /// ```
-    /// use company_employees::common::Company;
-    /// 
-    /// let mut company = Company::new();
-    /// 
-    /// 
-    /// company.employee_list.insert("sales".to_string(), vec!["employee".to_string()]);
-    /// 
-    /// let dept_employees = company.get_employees(&false, &Some("sales".to_string())).unwrap(); 
-    /// 
-    /// assert_eq!(
-    ///     dept_employees.employee_list.get_key_value(&"sales".to_string()),
-    ///     Some((&"sales".to_string() ,&vec!["employee".to_string()]))
-    /// )
-    /// ```
-    pub fn get_employees(
-        &mut self,
+
+    pub async fn get_employees(
+        &self,
         all_bool: &bool,
         department: &Option<String>
-    ) -> Result<Company, String> {
+    ) -> io::Result<Company> {
 
         if self.employee_list.is_empty() {
             let msg = "No employees have been added to the company yet.".to_string();
-
-            return Err(msg)
+            let error_string = Error::new(ErrorKind::Other, msg);
+            return Err(error_string)
         }
 
         if *all_bool {
 
-            let mut sorted_company = Company::new();
+            let mut company = Company::new().await?;
 
             self.employee_list
-                .iter_mut()
-                .sorted()
+                .iter()
                 .for_each(|(d, employees)| {
-                    employees.sort();
-                    sorted_company.employee_list.insert(d.to_owned(), employees.to_owned());
+                    let mut e = employees.to_owned();
+                    e.sort();
+                    company.employee_list.insert(d.to_owned(), e);
                 });
 
             return Ok(
-                sorted_company
+                company
             )
 
         } else {
@@ -62,14 +45,15 @@ impl Company {
             match self.employee_list.contains_key(&dept) {
                 true => {
 
-                    let mut filtered_company = Company::new();
+                    let mut filtered_company = Company::new().await?;
 
                     self.employee_list
-                        .iter_mut()
+                        .iter()
                         .filter(|(d, _)| **d == dept)
                         .for_each(|(d, employees)| {
-                            employees.sort();
-                            filtered_company.employee_list.insert(d.to_owned(), employees.to_owned());
+                            let mut e = employees.to_owned();
+                            e.sort();
+                            filtered_company.employee_list.insert(d.to_owned(), e);
                         });
 
                     return Ok(
@@ -78,7 +62,8 @@ impl Company {
                 },
                 false => {
                     let msg = format!("The {dept} department doesn't exist");
-                    return Err(msg)
+                    let error_string = Error::new(ErrorKind::Other, msg);
+                    return Err(error_string)
                 }
             }
         }

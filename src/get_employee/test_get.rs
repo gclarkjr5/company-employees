@@ -1,18 +1,18 @@
 use super::super::super::common::Company;
 
 
-#[test]
+#[tokio::test]
 #[should_panic]
-fn test_get_empty_employees() {
-    let mut company = Company::new();
+async fn test_get_empty_employees() {
+    let mut company = Company::new().await.unwrap();
     
-    company.get_employees(&true, &None).unwrap();
+    company.get_employees(&true, &None).await.unwrap();
 
 }
 
-#[test]
-fn test_get_all_employees() {
-    let mut company = Company::new();
+#[tokio::test]
+async fn test_get_all_employees() {
+    let mut company = Company::new().await.unwrap();
 
     let employees = vec![
         ("sales".to_string(), vec!["gary".to_string()]),
@@ -23,7 +23,7 @@ fn test_get_all_employees() {
         company.employee_list.entry(k.to_string()).or_insert(v.to_vec());
     }
 
-    let all_employees = company.get_employees(&true, &None).unwrap();
+    let all_employees = company.get_employees(&true, &None).await.unwrap();
 
     assert_eq!(
         (
@@ -37,9 +37,9 @@ fn test_get_all_employees() {
     )
 }
 
-#[test]
-fn test_get_dept_employees() {
-    let mut company = Company::new();
+#[tokio::test]
+async fn test_get_dept_employees() {
+    let mut company = Company::new().await.unwrap();
 
     let employees = vec![
         ("sales".to_string(), vec!["gary".to_string()]),
@@ -50,7 +50,7 @@ fn test_get_dept_employees() {
         company.employee_list.entry(k.to_string()).or_insert(v.to_vec());
     }
 
-    let dept_employees = company.get_employees(&false, &Some("finance".to_string())).unwrap();
+    let dept_employees = company.get_employees(&false, &Some("finance".to_string())).await.unwrap();
 
     assert_eq!(
         dept_employees.employee_list.get_key_value(&"finance".to_string()),
