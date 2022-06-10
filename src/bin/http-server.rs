@@ -23,34 +23,46 @@ async fn handle_company_reqests(req: Request<Body>) -> Result<Response<Body>, Er
     
     let mut response = Response::new(Body::empty());
 
+    let mut company = Company::init().await.expect("error initializing company");
+
     match (req.method(), req.uri().path()) {
-        (&Method::GET, "/company/all") => {
+        (&Method::GET, "/company") => {
+            let query = if let Some(q) = req.uri().query() {
+                q
+            } else {
+                return Ok(Response::builder()
+                    .status(StatusCode::UNPROCESSABLE_ENTITY)
+                    .body(MISSING.into())
+                    .unwrap());
+            };
 
-            let company = Company::init().await.expect("error initializing company");
+            let params = form_urlencoded::parse(query.as_bytes())
+                .into_owned()
+                .collect::<HashMap<String, String>>();
+
+            let department = if let Some(dept) = params.get("department") {
+                dept
+            } else {
+                return Ok(Response::builder()
+                    .status(StatusCode::UNPROCESSABLE_ENTITY)
+                    .body(MISSING.into())
+                    .unwrap());
+            };
+
+            match department.as_str() {
+                "all" => {
+                    let company_ser = serde_json::to_vec(&company.employee_list).expect("issue serializing employee list");
+
+                    *response.body_mut() = Body::from(company_ser);
+                },
+                dept => {
+                    let emps = company.get_employees(&false, &Some(dept.to_string())).await.expect("error getting employees of department");
             
-            let company_ser = serde_json::to_vec(&company.employee_list).expect("issue serializing employee list");
+                    let company_ser = serde_json::to_vec(&emps.employee_list).expect("issue serializing employee list");
 
-            *response.body_mut() = Body::from(company_ser);
-        },
-        (&Method::GET, "/company/department/sales") => {
-
-            let company = Company::init().await.expect("error initializing company");
-
-            let emps = company.get_employees(&false, &Some("sales".to_string())).await.expect("error getting employees of department");
-            
-            let company_ser = serde_json::to_vec(&emps.employee_list).expect("issue serializing employee list");
-
-            *response.body_mut() = Body::from(company_ser);
-
-        },
-        (&Method::GET, "/company/department/finance") => {
-            let company = Company::init().await.expect("error initializing company");
-
-            let emps = company.get_employees(&false, &Some("finance".to_string())).await.expect("error getting employees of department");
-            
-            let company_ser = serde_json::to_vec(&emps.employee_list).expect("issue serializing employee list");
-
-            *response.body_mut() = Body::from(company_ser);
+                    *response.body_mut() = Body::from(company_ser);
+                },
+            }  
         },
         (&Method::POST, "/company") => {
             let query = if let Some(q) = req.uri().query() {
@@ -84,8 +96,6 @@ async fn handle_company_reqests(req: Request<Body>) -> Result<Response<Body>, Er
                     .unwrap());
             };
 
-            let mut company = Company::init().await.expect("error initializing company");
-
             company.add_employee(name, department).await.expect("error adding employee to department");
             
             company.save().await.expect("error saving company to file");
@@ -93,6 +103,13 @@ async fn handle_company_reqests(req: Request<Body>) -> Result<Response<Body>, Er
             let output = format!("Added {} to the {} department.", name, department);
 
             *response.body_mut() = Body::from(output);
+        },
+        (&Method::POST, "/company/clear") => {
+            company.clear().await.expect("error clearing company");
+
+            company.save().await.expect("error saving company to file");
+
+            *response.body_mut() = Body::from("Company cleared.");
         },
         _ => {
             *response.status_mut() = StatusCode::NOT_FOUND;
