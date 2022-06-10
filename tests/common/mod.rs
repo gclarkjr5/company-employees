@@ -2,15 +2,11 @@
 use tokio::io;
 use assert_cmd::Command;
 
+pub fn setup() {
 
+    Command::cargo_bin("server").unwrap();
 
-pub async fn setup() -> io::Result<()> {
-
-    Command::new("cargo")
-        .args(&["run", "--bin", "server"])
-        .unwrap();
-
-    Ok(())
+    // Ok(())
 
     // let employees = vec![
     //     ("gary".to_string(), "sales".to_string()),
