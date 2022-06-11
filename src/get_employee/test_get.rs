@@ -4,7 +4,7 @@ use super::super::super::common::Company;
 #[tokio::test]
 #[should_panic]
 async fn test_get_empty_employees() {
-    let mut company = Company::new().await.unwrap();
+    let company = Company::new().await.unwrap();
     
     company.get_employees(&true, &None).await.unwrap();
 
