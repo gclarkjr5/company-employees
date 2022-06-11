@@ -2,7 +2,9 @@ use std::fs;
 use assert_cmd::Command;
 use std::str;
 use tokio::runtime::Runtime;
-use company_employees::common;
+use cli::cli;
+
+const COMPANY: &str = "../data/company.json";
 
 
 // missing arguments should fail
@@ -13,7 +15,7 @@ fn test_missing_arguments() {
     let rt = Runtime::new().unwrap();
 
     // // start server
-    rt.spawn(common::run_server());
+    rt.spawn(cli::run_server());
 
     // wait for server to come up
     std::thread::sleep(std::time::Duration::from_millis(50));
@@ -49,7 +51,7 @@ fn test_no_clients_to_get() {
     let rt = Runtime::new().unwrap();
 
     // // start server
-    rt.spawn(common::run_server());
+    rt.spawn(cli::run_server());
 
     // wait for server to come up
     std::thread::sleep(std::time::Duration::from_millis(50));
@@ -72,7 +74,7 @@ fn test_add_employee() {
     let rt = Runtime::new().unwrap();
 
     // // start server
-    rt.spawn(common::run_server());
+    rt.spawn(cli::run_server());
 
     // wait for server to come up
     std::thread::sleep(std::time::Duration::from_millis(50));
@@ -85,7 +87,7 @@ fn test_add_employee() {
 
     let left = serde_json::json!({"employee_list":{"sales":["gary"]}}).to_string();
 
-    let contents = fs::read("company.json").expect("error reading file");
+    let contents = fs::read(COMPANY).expect("error reading file");
     let right = str::from_utf8(&contents).expect("error deserializing data");
 
     assert_eq!(left, right);
@@ -101,7 +103,7 @@ fn test_add_duplicate_employee() {
     let rt = Runtime::new().unwrap();
 
     // // start server
-    rt.spawn(common::run_server());
+    rt.spawn(cli::run_server());
 
     // wait for server to come up
     std::thread::sleep(std::time::Duration::from_millis(50));
@@ -116,7 +118,7 @@ fn test_add_duplicate_employee() {
 
     let left = serde_json::json!({"employee_list":{"sales":["gary"]}}).to_string();
 
-    let contents = fs::read("company.json").expect("error reading file");
+    let contents = fs::read(COMPANY).expect("error reading file");
     let right = str::from_utf8(&contents).expect("error deserializing data");
 
     assert_eq!(left, right)
@@ -131,7 +133,7 @@ fn test_get_department() {
     let rt = Runtime::new().unwrap();
 
     // // start server
-    rt.spawn(common::run_server());
+    rt.spawn(cli::run_server());
 
     // wait for server to come up
     std::thread::sleep(std::time::Duration::from_millis(50));
@@ -157,7 +159,7 @@ fn test_get_all() {
     let rt = Runtime::new().unwrap();
 
     // // start server
-    rt.spawn(common::run_server());
+    rt.spawn(cli::run_server());
 
     // wait for server to come up
     std::thread::sleep(std::time::Duration::from_millis(50));
@@ -183,7 +185,7 @@ fn test_clear_company() {
     let rt = Runtime::new().unwrap();
 
     // // start server
-    rt.spawn(common::run_server());
+    rt.spawn(cli::run_server());
 
     // wait for server to come up
     std::thread::sleep(std::time::Duration::from_millis(50));
@@ -198,7 +200,7 @@ fn test_clear_company() {
 
     // lets assert that employees exist now before removing them
     let left = serde_json::json!({"employee_list":{"sales":["gary", "aleks"]}}).to_string();
-    let contents = fs::read("company.json").expect("error reading file");
+    let contents = fs::read(COMPANY).expect("error reading file");
     let right = str::from_utf8(&contents).expect("error deserializing data");
 
     assert_eq!(left, right);
@@ -208,7 +210,7 @@ fn test_clear_company() {
 
     let left = serde_json::json!({"employee_list":{}}).to_string();
 
-    let contents = fs::read("company.json").expect("error reading file");
+    let contents = fs::read(COMPANY).expect("error reading file");
     let right = str::from_utf8(&contents).expect("error deserializing data");
 
     assert_eq!(left, right);

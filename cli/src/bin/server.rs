@@ -1,15 +1,10 @@
 use tokio::io;
-
-use company_employees::common;
+use cli::cli;
 
 #[tokio::main]
 async fn main() -> io::Result<()> {
 
-    common::run_server().await?;
+    cli::run_server().await?;
 
     Ok(())
 }
- 
-
-    
-    
