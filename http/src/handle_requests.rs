@@ -8,9 +8,29 @@ use company_employees::common::Company;
 use std::collections::HashMap;
 use url::form_urlencoded;
 
-type Db = Arc<Mutex<Company>>;
 
 static MISSING: &[u8] = b"Missing field";
+
+// We'll bind to 127.0.0.1:3000
+let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+
+// let db = Arc::new(Mutex::new(company));
+
+// A `Service` is needed for every connection, so this
+// creates one from our `hello_world` function.
+let make_svc = make_service_fn(|_conn| async {
+    // service_fn converts our function into a `Service`
+    Ok::<_, Infallible>(service_fn(handle_company_reqests))
+});
+
+let server = Server::bind(&addr).serve(make_svc);
+
+let graceful = server.with_graceful_shutdown(shutdown_signal());
+
+// Run this server for... forever!
+if let Err(e) = graceful.await {
+    eprintln!("server error: {}", e);
+}
 
 async fn shutdown_signal() {
     // Wait for the CTRL+C signal
@@ -117,28 +137,4 @@ async fn handle_company_reqests(req: Request<Body>) -> Result<Response<Body>, Er
     }
     
     Ok(response)
-}
-
-#[tokio::main]
-async fn main() {
-    // We'll bind to 127.0.0.1:3000
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
-
-    // let db = Arc::new(Mutex::new(company));
-
-    // A `Service` is needed for every connection, so this
-    // creates one from our `hello_world` function.
-    let make_svc = make_service_fn(|_conn| async {
-        // service_fn converts our function into a `Service`
-        Ok::<_, Infallible>(service_fn(handle_company_reqests))
-    });
-
-    let server = Server::bind(&addr).serve(make_svc);
-
-    let graceful = server.with_graceful_shutdown(shutdown_signal());
-
-    // Run this server for... forever!
-    if let Err(e) = graceful.await {
-        eprintln!("server error: {}", e);
-    }
 }

@@ -1,7 +1,7 @@
 use tokio::io::{self, AsyncWriteExt, AsyncReadExt};
 use tokio::net::TcpStream;
 use clap::{CommandFactory, Parser, ErrorKind};
-use company_employees::common::Cli;
+use cli::cli::*;
 use std::str;
 
 
