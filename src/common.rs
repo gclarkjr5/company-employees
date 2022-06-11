@@ -1,17 +1,52 @@
-use tokio::fs;
-use tokio::io::{self, AsyncReadExt, AsyncWriteExt, Error, ErrorKind};
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::str;
-
+use std::sync::Arc;
+use tokio::fs;
+use tokio::io::{self, AsyncReadExt, AsyncWriteExt, Error, ErrorKind};
+use tokio::net::TcpListener;
+use tokio::sync::Mutex;
+use serde::{Deserialize, Serialize};
 use clap::{Parser, Subcommand};
 
-use tokio::net::TcpListener;
-use std::sync::Arc;
-use tokio::sync::Mutex;
-
-
 type Db = Arc<Mutex<Company>>;
+
+/// An application to add employees to a company and also see who exists
+#[derive(Parser)]
+#[clap(author, about, long_about = None)]
+pub struct Cli {
+    /// The operation to perform on the company
+    #[clap(subcommand)]
+    pub command: Commands,
+}
+
+#[derive(Subcommand, Debug, Serialize, Deserialize)]
+pub enum Commands {
+    /// add an employee & department combo to the company if it doesn't already exist
+    Add {
+        
+        /// Name of the employee to add
+        name: String,
+
+        /// Department that the employee works in
+        department: String
+    },
+
+    /// get the employees of a department
+    // #[clap(arg_enum)]
+    Get {
+
+        /// return all employees from the company by department
+        #[clap(long)]
+        all: bool,
+
+        /// get the employees of a specific department
+        #[clap(short, long)]
+        department: Option<String>
+    },
+
+    /// clear the entire company
+    Clear,
+}
 
 
 /// A company with a list of departments and the employees that work in those
@@ -205,42 +240,4 @@ async fn process_command(command: Commands, db: Db) -> io::Result<String> {
             }
         },
     };
-}
-
-/// An application to add employees to a company and also see who exists
-#[derive(Parser)]
-#[clap(author, about, long_about = None)]
-pub struct Cli {
-    /// The operation to perform on the company
-    #[clap(subcommand)]
-    pub command: Commands,
-}
-
-#[derive(Subcommand, Debug, Serialize, Deserialize)]
-pub enum Commands {
-    /// add an employee & department combo to the company if it doesn't already exist
-    Add {
-        
-        /// Name of the employee to add
-        name: String,
-
-        /// Department that the employee works in
-        department: String
-    },
-
-    /// get the employees of a department
-    // #[clap(arg_enum)]
-    Get {
-
-        /// return all employees from the company by department
-        #[clap(long)]
-        all: bool,
-
-        /// get the employees of a specific department
-        #[clap(short, long)]
-        department: Option<String>
-    },
-
-    /// clear the entire company
-    Clear,
 }
