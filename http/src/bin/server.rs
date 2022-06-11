@@ -1,12 +1,10 @@
 use tokio::io;
-use company-http::handle_requests::*;
-
-
+use http::http;
 
 #[tokio::main]
-async fn main() {
+async fn main() -> io::Result<()> {
 
-    run_server().await?;
+    http::run_server().await?;
 
     Ok(())
 }
