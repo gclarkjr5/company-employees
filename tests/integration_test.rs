@@ -1,15 +1,26 @@
-mod common;
-use tokio::fs;
-use company_employees::common::Company;
-// use tokio::io::{self, AsyncReadExt, AsyncWriteExt};
+use std::fs;
 use assert_cmd::Command;
-use serde::{Serialize, Deserialize};
 use std::str;
+use tokio::runtime::Runtime;
+use company_employees::common;
 
 
 // missing arguments should fail
-#[tokio::test]
-async fn test_missing_arguments() {
+#[test]
+fn test_missing_arguments() {
+
+    // spawn a server
+    let rt = Runtime::new().unwrap();
+
+    // // start server
+    rt.spawn(common::run_server());
+
+    // wait for server to come up
+    std::thread::sleep(std::time::Duration::from_millis(50));
+
+    // run this command to ensure that the server is working, without the server up, this will cause failure
+    Command::cargo_bin("client").unwrap().arg("clear").assert().success();
+
     // get cmds
     Command::cargo_bin("client").unwrap().assert().failure();
 
@@ -31,10 +42,21 @@ async fn test_missing_arguments() {
 }
 
 // get with no client should fail for all and department
-#[tokio::test]
-async fn test_no_clients_to_get() {
+#[test]
+fn test_no_clients_to_get() {
 
-    Command::cargo_bin("client").unwrap().arg("clear").assert();
+    // spawn a server
+    let rt = Runtime::new().unwrap();
+
+    // // start server
+    rt.spawn(common::run_server());
+
+    // wait for server to come up
+    std::thread::sleep(std::time::Duration::from_millis(50));
+
+    // run this command to ensure that the server is working, without the server up, this will cause failure
+    // additionally this is setting up with an empty file
+    Command::cargo_bin("client").unwrap().arg("clear").assert().success();
 
     // let mut client = Command::cargo_bin("client").unwrap();
 
@@ -44,36 +66,57 @@ async fn test_no_clients_to_get() {
 }
 
 // add should add employees
-#[tokio::test]
-async fn test_add_employee() {
-    
-    Command::cargo_bin("client").unwrap().arg("clear").assert();
+#[test]
+fn test_add_employee() {
+    // spawn a server
+    let rt = Runtime::new().unwrap();
 
-    // let mut client = Command::cargo_bin("client").unwrap();
+    // // start server
+    rt.spawn(common::run_server());
+
+    // wait for server to come up
+    std::thread::sleep(std::time::Duration::from_millis(50));
+
+    // run this command to ensure that the server is working, without the server up, this will cause failure
+    // additionally this is setting up with an empty file
+    Command::cargo_bin("client").unwrap().arg("clear").assert().success();
 
     Command::cargo_bin("client").unwrap().arg("add").arg("gary").arg("sales").assert().success();
 
     let left = serde_json::json!({"employee_list":{"sales":["gary"]}}).to_string();
 
-    let contents = fs::read("company.json").await.expect("error reading file");
+    let contents = fs::read("company.json").expect("error reading file");
     let right = str::from_utf8(&contents).expect("error deserializing data");
 
-    assert_eq!(left, right)
+    assert_eq!(left, right);
+    
+    
 
 }
 
 // duplicate add should fail on duplicate employee
-#[tokio::test]
-async fn test_add_duplicate_employee() {
-    
-    Command::cargo_bin("client").unwrap().arg("clear").assert();
+#[test]
+fn test_add_duplicate_employee() {
+    // spawn a server
+    let rt = Runtime::new().unwrap();
 
+    // // start server
+    rt.spawn(common::run_server());
+
+    // wait for server to come up
+    std::thread::sleep(std::time::Duration::from_millis(50));
+
+    // run this command to ensure that the server is working, without the server up, this will cause failure
+    // additionally this is setting up with an empty file
+    Command::cargo_bin("client").unwrap().arg("clear").assert().success();
+
+    // try to add same employee + department twice
     Command::cargo_bin("client").unwrap().arg("add").arg("gary").arg("sales").assert().success();
     Command::cargo_bin("client").unwrap().arg("add").arg("gary").arg("sales").assert().failure();
 
     let left = serde_json::json!({"employee_list":{"sales":["gary"]}}).to_string();
 
-    let contents = fs::read("company.json").await.expect("error reading file");
+    let contents = fs::read("company.json").expect("error reading file");
     let right = str::from_utf8(&contents).expect("error deserializing data");
 
     assert_eq!(left, right)
@@ -82,10 +125,20 @@ async fn test_add_duplicate_employee() {
 
 
 // get should work for department
-#[tokio::test]
-async fn test_get_department() {
-    
-    Command::cargo_bin("client").unwrap().arg("clear").assert();
+#[test]
+fn test_get_department() {
+    // spawn a server
+    let rt = Runtime::new().unwrap();
+
+    // // start server
+    rt.spawn(common::run_server());
+
+    // wait for server to come up
+    std::thread::sleep(std::time::Duration::from_millis(50));
+
+    // run this command to ensure that the server is working, without the server up, this will cause failure
+    // additionally this is setting up with an empty file
+    Command::cargo_bin("client").unwrap().arg("clear").assert().success();
 
     // add some employees
     Command::cargo_bin("client").unwrap().arg("add").arg("gary").arg("sales").assert().success();
@@ -98,10 +151,20 @@ async fn test_get_department() {
 }
 
 // get should work for all
-#[tokio::test]
-async fn test_get_all() {
-    
-    Command::cargo_bin("client").unwrap().arg("clear").assert();
+#[test]
+fn test_get_all() {
+    // spawn a server
+    let rt = Runtime::new().unwrap();
+
+    // // start server
+    rt.spawn(common::run_server());
+
+    // wait for server to come up
+    std::thread::sleep(std::time::Duration::from_millis(50));
+
+    // run this command to ensure that the server is working, without the server up, this will cause failure
+    // additionally this is setting up with an empty file
+    Command::cargo_bin("client").unwrap().arg("clear").assert().success();
 
     // add some employees
     Command::cargo_bin("client").unwrap().arg("add").arg("gary").arg("sales").assert().success();
@@ -114,18 +177,28 @@ async fn test_get_all() {
 }
 
 // clear should empty
-#[tokio::test]
-async fn test_clear_company() {
-    
-    Command::cargo_bin("client").unwrap().arg("clear").assert();
+#[test]
+fn test_clear_company() {
+    // spawn a server
+    let rt = Runtime::new().unwrap();
+
+    // // start server
+    rt.spawn(common::run_server());
+
+    // wait for server to come up
+    std::thread::sleep(std::time::Duration::from_millis(50));
+
+    // run this command to ensure that the server is working, without the server up, this will cause failure
+    // additionally this is setting up with an empty file
+    Command::cargo_bin("client").unwrap().arg("clear").assert().success();
 
     // add some employees and make sure the file contents contains them
     Command::cargo_bin("client").unwrap().arg("add").arg("gary").arg("sales").assert().success();
     Command::cargo_bin("client").unwrap().arg("add").arg("aleks").arg("sales").assert().success();
 
+    // lets assert that employees exist now before removing them
     let left = serde_json::json!({"employee_list":{"sales":["gary", "aleks"]}}).to_string();
-
-    let contents = fs::read("company.json").await.expect("error reading file");
+    let contents = fs::read("company.json").expect("error reading file");
     let right = str::from_utf8(&contents).expect("error deserializing data");
 
     assert_eq!(left, right);
@@ -135,7 +208,7 @@ async fn test_clear_company() {
 
     let left = serde_json::json!({"employee_list":{}}).to_string();
 
-    let contents = fs::read("company.json").await.expect("error reading file");
+    let contents = fs::read("company.json").expect("error reading file");
     let right = str::from_utf8(&contents).expect("error deserializing data");
 
     assert_eq!(left, right);
