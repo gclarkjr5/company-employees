@@ -87,22 +87,29 @@ async fn test_add_employee() {
 
     let url_ending = format!("?name={name}&department={department}");
 
+    
+
+    let data = serde_json::json!({"employee_list":{"sales":["gary"]}});
+    let expected_data = serde_json::to_string(&data)
+        .expect("error converting json to string");
+
     let expected_responses = (
         "Missing field",
-        format!("Added {} to the {} department.", &name, &department)
+        format!("Added {} to the {} department.", &name, &department),
+        expected_data
     );
-
-    // let file = fs::read(COMPANY).await.expect("error reading file");
-    // let data = str::from_utf8(&file).expect("error converting data");
+    
 
     // add employee
     let outcome = tokio::spawn(async move {
-        let res = (
-            return_resp(Method::POST, "").await,
-            return_resp(Method::POST, &*url_ending).await
-        );
+        let res1 = return_resp(Method::POST, "").await;
+        let res2 = return_resp(Method::POST, &*url_ending).await;
 
-        assert_eq!(expected_responses, (res.0.as_str(), res.1))
+
+        let file = fs::read(COMPANY).await.expect("error reading file");
+        let data = str::from_utf8(&file).expect("error converting data");
+
+        assert_eq!(expected_responses, (res1.as_str(), res2, data.to_string()))
     });
 
 
