@@ -4,12 +4,13 @@ use clap::{CommandFactory, Parser, ErrorKind};
 use cli::cli::*;
 use std::str;
 
+type ErrorGen = Box<dyn std::error::Error + Send + Sync>;
 
 #[tokio::main]
-async fn main() -> io::Result<()> {
+async fn main() -> Result<(), ErrorGen> {
 
     // connect to server
-    let stream = TcpStream::connect("127.0.0.1:6379").await.unwrap();
+    let stream = TcpStream::connect("127.0.0.1:6379").await?;
 
     // split server into reader & writer
     let (mut rd, mut wr) = stream.into_split();
@@ -20,7 +21,7 @@ async fn main() -> io::Result<()> {
         let cli = Cli::parse();
 
         // serialize the command struct and write it to the server
-        let encoded = serde_json::to_vec(&cli.command).unwrap();
+        let encoded = serde_json::to_vec(&cli.command)?;
         wr.write_all(&encoded).await?;
 
         Ok::<_, io::Error>(())
@@ -37,11 +38,11 @@ async fn main() -> io::Result<()> {
                 let mut cmd = Cli::command();
                     cmd.error(
                         ErrorKind::ValueValidation,
-                        str::from_utf8(&mut buffer).unwrap(),
+                        str::from_utf8(&mut buffer).expect("error converting buffer"),
                     )
                     .exit();
             },
-            Ok(_) => println!("{}", str::from_utf8(&mut buffer).unwrap()),
+            Ok(_) => println!("{}", str::from_utf8(&mut buffer).expect("error converting buffer")),
             Err(_) => eprintln!("error converting buffer")
         }
 

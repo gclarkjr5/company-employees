@@ -1,9 +1,11 @@
 use super::super::common::{Company};
-use tokio::io::{self, Error, ErrorKind};
+use tokio::io::{Error, ErrorKind};
 
 #[cfg(test)]
 #[path="test_add.rs"]
 mod test_add;
+
+type ErrorGen = Box<dyn std::error::Error + Send + Sync>;
 
 impl Company {
 
@@ -13,7 +15,7 @@ impl Company {
         &mut self,
         employee_name: &String,
         employee_dept: &String
-    ) -> io::Result<&Company> {
+    ) -> Result<&Company, ErrorGen> {
         
         // check if employee exists
         let department_employees = self.employee_list.get_mut(employee_dept);
@@ -23,7 +25,7 @@ impl Company {
                 true => {
                     let msg = format!("The employee {} already exists for the {} department", employee_name, employee_dept);
                     let error_string = Error::new(ErrorKind::Other, msg);
-                    Err(error_string)
+                    Err(Box::new(error_string))
                 },
                 false => {
                     x.push(employee_name.to_owned());

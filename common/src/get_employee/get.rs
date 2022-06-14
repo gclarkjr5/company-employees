@@ -1,9 +1,12 @@
 use super::super::common::{Company};
-use tokio::io::{self, Error, ErrorKind};
+use tokio::io::{Error, ErrorKind};
+
 
 #[cfg(test)]
 #[path="test_get.rs"]
 mod test_get;
+
+type ErrorGen = Box<dyn std::error::Error + Send + Sync>;
 
 impl Company {
 
@@ -14,12 +17,12 @@ impl Company {
         &self,
         all_bool: &bool,
         department: &Option<String>
-    ) -> io::Result<Company> {
+    ) -> Result<Company, ErrorGen> {
 
         if self.employee_list.is_empty() {
             let msg = "No employees have been added to the company yet.".to_string();
             let error_string = Error::new(ErrorKind::Other, msg);
-            return Err(error_string)
+            return Err(Box::new(error_string))
         }
 
         if *all_bool {
@@ -40,7 +43,7 @@ impl Company {
 
         } else {
 
-            let dept = department.to_owned().unwrap();
+            let dept = department.to_owned().expect("no value provided for department");
 
             match self.employee_list.contains_key(&dept) {
                 true => {
@@ -63,7 +66,7 @@ impl Company {
                 false => {
                     let msg = format!("The {dept} department doesn't exist");
                     let error_string = Error::new(ErrorKind::Other, msg);
-                    return Err(error_string)
+                    return Err(Box::new(error_string))
                 }
             }
         }

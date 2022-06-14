@@ -1,10 +1,11 @@
 use std::collections::HashMap;
 use std::str;
 use tokio::fs;
-use tokio::io::{self};
 use serde::{Deserialize, Serialize};
 
 const COMPANY: &str = "../data/company.json";
+
+type ErrorGen = Box<dyn std::error::Error + Send + Sync>;
 
 /// A company with a list of departments and the employees that work in those
 /// departments.
@@ -20,7 +21,7 @@ pub struct Company {
 impl Company {
 
     /// instantiates a new company with no employees in it
-    pub async fn new() -> io::Result<Company> {
+    pub async fn new() -> Result<Company, ErrorGen> {
         let company = Company {employee_list: HashMap::new()};
 
         Ok(company)
@@ -28,7 +29,7 @@ impl Company {
 
     // reads in the current Company data if it exists
     // if not it will create a new empty one
-    pub async fn init() -> io::Result<Company> {
+    pub async fn init() -> Result<Company, ErrorGen> {
 
         let contents = match fs::read(COMPANY).await {
             Ok(f) => f,
@@ -37,7 +38,7 @@ impl Company {
 
                 let new_company = Company::new().await?;
 
-                let company = serde_json::to_vec(&new_company).unwrap();
+                let company = serde_json::to_vec(&new_company)?;
 
                 fs::write(COMPANY, &company).await?;
 
@@ -45,26 +46,27 @@ impl Company {
             }
         };
 
-        let string_content = str::from_utf8(&contents).unwrap();
-        let company: Company = serde_json::from_str(&string_content).unwrap();
+        let string_content = str::from_utf8(&contents)?;
+        
+        let company: Company = serde_json::from_str(&string_content)?;
 
         Ok(company)
     }
 
-    pub async fn clear(&mut self) -> io::Result<&mut Company> {
+    pub async fn clear(&mut self) -> Result<&mut Company, ErrorGen> {
 
         self.employee_list.clear();
 
-        let company = serde_json::to_vec(&self).unwrap();
+        let company = serde_json::to_vec(&self)?;
 
         fs::write(COMPANY, &company).await?;
 
         Ok(self)
     }
 
-    pub async fn save(&self) -> io::Result<&Company> {
+    pub async fn save(&self) -> Result<&Company, ErrorGen> {
 
-        let company = serde_json::to_vec(&self).unwrap();
+        let company = serde_json::to_vec(&self)?;
 
         fs::write(COMPANY, &company).await?;
 
