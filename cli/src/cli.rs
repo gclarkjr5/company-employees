@@ -8,6 +8,8 @@ use serde::{Deserialize, Serialize};
 use std::str;
 
 type Db = Arc<Mutex<Company>>;
+type ErrorGen = Box<dyn std::error::Error + Send + Sync>;
+
 
 /// An application to add employees to a company and also see who exists
 #[derive(Parser)]
@@ -47,7 +49,7 @@ pub enum Commands {
     Clear,
 }
 
-pub async fn run_server() -> io::Result<()> {
+pub async fn run_server() -> Result<(), ErrorGen> {
     let listener = TcpListener::bind("127.0.0.1:6379").await?;
 
     let company = match Company::init().await {
@@ -73,9 +75,12 @@ pub async fn run_server() -> io::Result<()> {
 
             rd.read_to_end(&mut buffer).await?;
 
-            let command_str = str::from_utf8(&mut buffer).unwrap();
+            let command_str = match str::from_utf8(&mut buffer) {
+                Ok(v) => Ok(v),
+                Err(e) => Err(Error::new(ErrorKind::Other, e))
+            };
 
-            let command: Commands = match serde_json::from_str(&command_str) {
+            let command: Commands = match serde_json::from_str(&command_str?) {
                 Ok(data) => data,
                 Err(_) => {
                     eprintln!("Error at the CLI");
@@ -105,7 +110,7 @@ pub async fn run_server() -> io::Result<()> {
     }
 }
 
-async fn process_command(command: Commands, db: Db) -> io::Result<String> {
+async fn process_command(command: Commands, db: Db) -> Result<String, ErrorGen> {
 
     // get the subcommand from the cli and execute it
     match &command {
@@ -122,7 +127,7 @@ async fn process_command(command: Commands, db: Db) -> io::Result<String> {
                 },
                 Err(e) => {
                     let msg = Error::new(ErrorKind::Other, e);
-                    return Err(msg)
+                    return Err(Box::new(msg))
                 }
             }
 
@@ -131,7 +136,7 @@ async fn process_command(command: Commands, db: Db) -> io::Result<String> {
 
             if !*all && department.is_none() {
                 let msg = Error::new(ErrorKind::Other, "Either --all or --department must be defined for a GET command");
-                return Err(msg)
+                return Err(Box::new(msg))
             }
 
             let company = db.lock().await;
@@ -150,7 +155,7 @@ async fn process_command(command: Commands, db: Db) -> io::Result<String> {
                 },
                 Err(e) => {
                     let msg = Error::new(ErrorKind::Other, e);
-                    return Err(msg)
+                    return Err(Box::new(msg))
                 }
             }
         },
@@ -164,7 +169,7 @@ async fn process_command(command: Commands, db: Db) -> io::Result<String> {
                 },
                 Err(e) => {
                     let msg = Error::new(ErrorKind::Other, e);
-                    return Err(msg)
+                    return Err(Box::new(msg))
                 },
             }
         },

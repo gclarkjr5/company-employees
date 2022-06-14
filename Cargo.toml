@@ -2,6 +2,6 @@
 [workspace]
 members = [
     "cli",
-    "http"
+    "http",
+    "common"
 ]
-exclude = ["common"]
