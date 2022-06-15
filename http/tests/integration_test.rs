@@ -2,6 +2,7 @@ use tokio::fs;
 use std::str;
 use http::http;
 use hyper::{Body, Method, Client, Request};
+use tokio::time::{sleep, Duration};
 
 const COMPANY: &str = "../data/company.json";
 const BASE_URL: &str = "http://127.0.0.1:3000";
@@ -13,6 +14,9 @@ async fn test_missing_arguments() {
     tokio::spawn(async {
         http::run_server().await
     });
+
+    // wait for server to come up
+    sleep(Duration::from_secs(2)).await;
 
     let name_ending = "?name=name_1";
     let dept_ending = "?department=dept_1";
@@ -31,6 +35,8 @@ async fn test_missing_arguments() {
             actual_responses.push(res)
         }
 
+        println!("{:?}", actual_responses);
+
         assert_eq!(
             expected_responses,
             actual_responses
@@ -45,13 +51,16 @@ async fn test_missing_arguments() {
 // getting the data with no employees added yet should fail
 #[tokio::test]
 async fn test_get_no_employees() {
-
     // spawn server
     tokio::spawn(async {
         http::run_server().await
     });
 
-    let url_ending = "?department=dept_1";
+    // wait for server to come up
+    sleep(Duration::from_secs(2)).await;
+
+    let url_endings = vec!["?department=all", "?department=dept_1"];
+    let expected_responses = vec!["No employees have been added to the company yet."; 2];
 
     let outcome = tokio::spawn(async move {
         // first clear out the company just to ensure no employees are there
@@ -59,12 +68,16 @@ async fn test_get_no_employees() {
         clear_company_and_verify().await;
 
         // attempt to get employees from empty company
-        let res = return_resp(Method::GET, &*url_ending).await.unwrap();
+        let mut results = vec![];
+        for url in url_endings {
+            let res = return_resp(Method::GET, &*url).await.unwrap();
+            results.push(res);
+        }
 
         // should return info about no employees
         assert_eq!(
-            "No employees have been added to the company yet.",
-            res
+            expected_responses,
+            results
         )
 
     });
@@ -81,6 +94,9 @@ async fn test_add_employees() {
         http::run_server().await
     });
 
+    // wait for server to come up
+    sleep(Duration::from_secs(2)).await;
+
     let names_depts = vec![
         ("gary", "sales"),
         ("aleks", "finance")
@@ -94,15 +110,6 @@ async fn test_add_employees() {
         .map(|(n, d)| format!("Added {} to the {} department.", n, d))
         .collect::<Vec<String>>();
     
-    // let data = serde_json::json!(
-    //     {"employee_list":{"sales":["gary"], "finance":["aleks"]}}
-    // );
-
-    // let expected_data = serde_json::to_string(&data)
-    //     .expect("error converting json to string");
-
-    // expected_responses.push(expected_data);
-    
     let outcome = tokio::spawn(async move {
         // clear company and verify its empty
         clear_company_and_verify().await;
@@ -113,11 +120,6 @@ async fn test_add_employees() {
             let res = return_resp(Method::POST, &*url).await.unwrap();
             results.push(res);
         }
-
-        // let file = fs::read(COMPANY).await.expect("error reading file");
-        // let data = str::from_utf8(&file).expect("error converting data");
-
-        // results.push(data.to_string());
 
         assert_eq!(expected_responses, results)
     });
@@ -132,6 +134,9 @@ async fn test_duplicate_employee() {
     tokio::spawn(async {
         http::run_server().await
     });
+
+    // wait for server to come up
+    sleep(Duration::from_secs(2)).await;
 
     let names_depts = vec![
         ("gary", "sales"),
@@ -152,15 +157,6 @@ async fn test_duplicate_employee() {
     let duplicate_response = format!("The employee {} already exists for the {} department", names_depts[2].0, names_depts[2].1);
     expected_responses.push(duplicate_response);
     
-    // let data = serde_json::json!(
-    //     {"employee_list":{"sales":["gary"], "finance":["aleks"]}}
-    // );
-
-    // let expected_data = serde_json::to_string(&data)
-    //     .expect("error converting json to string");
-
-    // expected_responses.push(expected_data);
-    
     let outcome = tokio::spawn(async move {
         // clear out the company data
         clear_company_and_verify().await;
@@ -173,11 +169,6 @@ async fn test_duplicate_employee() {
             results.push(res);
         }
 
-        // let file = fs::read(COMPANY).await.expect("error reading file");
-        // let data = str::from_utf8(&file).expect("error converting data");
-
-        // results.push(data.to_string());
-
         assert_eq!(expected_responses, results)
     });
 
@@ -188,11 +179,13 @@ async fn test_duplicate_employee() {
 // gets after adding employee should return properly
 #[tokio::test]
 async fn test_get_departments() {
-
     // spawn server
     tokio::spawn(async {
         http::run_server().await
     });
+
+    // wait for server to come up
+    sleep(Duration::from_secs(2)).await;
 
     let names_depts = vec![
         ("gary", "sales"),
@@ -217,11 +210,8 @@ async fn test_get_departments() {
     let expected_gets = vec![
         "For the sales department the following employees exist: gary",
         "For the finance department the following employees exist: aleks, gary",
-        "For the sales department the following employees exist: gary\nFor the finance department the following employees exist: aleks, gary"
+        "For the finance department the following employees exist: aleks, gary\nFor the sales department the following employees exist: gary"
     ];
-
-    // the third iteration of the gets will be the data expected after the adds
-    // expected_adds.push(expected_gets[2].clone());
 
     let outcome = tokio::spawn(async move {
         // clear out company data
@@ -232,11 +222,6 @@ async fn test_get_departments() {
             let res = return_resp(Method::POST, &*url).await.unwrap();
             actual_adds.push(res);
         }
-
-        // let file = fs::read(COMPANY).await.expect("error reading file");
-        // let data = str::from_utf8(&file).expect("error converting data");
-
-        // actual_adds.push(data.to_string());
 
         assert_eq!(expected_adds, actual_adds);
 
@@ -257,38 +242,17 @@ async fn test_get_departments() {
 // clearing the company should work
 #[tokio::test]
 async fn test_clearing() {
-
     // spawn server
     tokio::spawn(async {
         http::run_server().await
     });
 
-    // let expected_response = "Company cleared.";
-
-    // let data = serde_json::json!({"employee_list":{}});
-    // let expected_data = serde_json::to_string(&data)
-    //     .expect("error converting json to string");
+    // wait for server to come up
+    sleep(Duration::from_secs(2)).await;
 
     // run a clear on the company with a success assertion to ensure the server is up and running
     let outcome = tokio::spawn(async move {
-
         clear_company_and_verify().await
-
-        // let res = return_resp(Method::POST, "/clear").await;
-
-        // let file = fs::read(COMPANY).await.expect("error reading file");
-        // let data = str::from_utf8(&file).expect("error converting data");
-
-        // assert_eq!(
-        //     (
-        //         expected_response,
-        //         expected_data.as_str()
-        //     ),
-        //     (
-        //         res.as_str(),
-        //         data
-        //     )
-        // )
     });
 
     outcome.await.unwrap();
@@ -309,6 +273,7 @@ async fn clear_company_and_verify() {
 }
 
 async fn return_resp(method: Method, url_ending: &str) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+    
     let client = Client::new();
 
     let req = Request::builder()
