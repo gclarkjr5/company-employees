@@ -1,28 +1,37 @@
-use std::convert::Infallible;
 use std::net::SocketAddr;
 use hyper::{Body, Request, Response, Server, Method, StatusCode};
 use hyper::service::{make_service_fn, service_fn};
-// use std::sync::Arc;
-// use tokio::sync::Mutex;
+use std::sync::Arc;
+use tokio::sync::Mutex;
 use common::common::Company;
 use std::collections::HashMap;
 use url::form_urlencoded;
+use std::iter::FromIterator;
 
 static MISSING: &[u8] = b"Missing field";
 
 type ErrorGen = Box<dyn std::error::Error + Send + Sync>;
+type Db = Arc<Mutex<Company>>;
 
 pub async fn run_server() -> Result<(), ErrorGen> {
     // We'll bind to 127.0.0.1:3000
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
 
-    // let db = Arc::new(Mutex::new(company));
+    let c = Company::init().await.unwrap();
+    
+    let db: Db = Arc::new(Mutex::new(c));
 
     // A `Service` is needed for every connection, so this
-    // creates one from our `hello_world` function.
-    let make_svc = make_service_fn(|_conn| async {
-        // service_fn converts our function into a `Service`
-        Ok::<_, Infallible>(service_fn(handle_company_reqests))
+    let make_svc = make_service_fn(move |_conn| {
+
+        let db_clone = db.clone();
+
+        async {
+            Ok::<_, ErrorGen>(service_fn(move |req| {
+                handle_company_reqests(req, db_clone.clone())
+            }))
+        }
+        
     });
 
     let server = Server::bind(&addr).serve(make_svc);
@@ -45,13 +54,14 @@ async fn shutdown_signal() {
         .await.unwrap();
 }
 
-async fn handle_company_reqests(req: Request<Body>) -> Result<Response<Body>, ErrorGen> {
-    
+async fn handle_company_reqests(req: Request<Body>, db: Db) -> Result<Response<Body>, ErrorGen> {
+
+    let mut company = db.lock().await;
+
     let mut response = Response::new(Body::empty());
 
-    let mut company = Company::init().await?;
-
     match (req.method(), req.uri().path()) {
+        
         (&Method::GET, "/company") => {
             let query = if let Some(q) = req.uri().query() {
                 q
@@ -80,15 +90,26 @@ async fn handle_company_reqests(req: Request<Body>) -> Result<Response<Body>, Er
             match department.as_str() {
                 "all" => {
 
-                    let mut string_vec = vec![];
-                    for (dept, employees) in company.employee_list.iter() {
-                        let employees_string = employees.join(", ");
-                        let string = format!("For the {dept} department the following employees exist: {employees_string}");
-                        string_vec.push(string)
-                    }
-                    // let company_ser = serde_json::to_vec(&company)?;
+                    match company.get_employees(&true, &None).await {
+                        Ok(c) => {
 
-                    *response.body_mut() = Body::from(string_vec.join("\n"));
+                            let mut company_vec = Vec::from_iter(c.employee_list);
+
+                            company_vec.sort();
+
+                            let mut string_vec = vec![];
+
+                            for (dept, employees) in company_vec {
+                                let string = format!("For the {dept} department the following employees exist: {}", employees.join(", "));
+                                
+                                string_vec.push(string)
+                            }
+
+                            *response.body_mut() = Body::from(string_vec.join("\n"));
+
+                        },
+                        Err(e) => *response.body_mut() = Body::from(e.to_string()),
+                    }
                 },
                 dept => {
 
