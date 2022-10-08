@@ -3,7 +3,7 @@ use std::str;
 use tokio::fs;
 use serde::{Deserialize, Serialize};
 
-const COMPANY: &str = "../data/company.json";
+const COMPANY: &str = "./data/company.json";
 
 type ErrorGen = Box<dyn std::error::Error + Send + Sync>;
 

@@ -1,9 +1,9 @@
-use cli::cli;
+use ::cli::server::Server;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
-    cli::run_server().await?;
+    Server::run().await?;
 
     Ok(())
 }

@@ -6,3 +6,4 @@
 //! any point the user can end the operations.
 
 pub mod cli;
+pub mod server;

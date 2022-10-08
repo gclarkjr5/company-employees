@@ -2,7 +2,7 @@ use std::fs;
 use assert_cmd::Command;
 use std::str;
 use tokio::runtime::Runtime;
-use cli::cli;
+use ::cli::server::Server;
 
 const COMPANY: &str = "../data/company.json";
 
@@ -15,7 +15,7 @@ fn test_missing_arguments() {
     let rt = Runtime::new().unwrap();
 
     // // start server
-    rt.spawn(cli::run_server());
+    rt.spawn(Server::run());
 
     // wait for server to come up
     std::thread::sleep(std::time::Duration::from_millis(50));
@@ -51,7 +51,7 @@ fn test_no_clients_to_get() {
     let rt = Runtime::new().unwrap();
 
     // // start server
-    rt.spawn(cli::run_server());
+    rt.spawn(Server::run());
 
     // wait for server to come up
     std::thread::sleep(std::time::Duration::from_millis(50));
@@ -74,7 +74,7 @@ fn test_add_employee() {
     let rt = Runtime::new().unwrap();
 
     // // start server
-    rt.spawn(cli::run_server());
+    rt.spawn(Server::run());
 
     // wait for server to come up
     std::thread::sleep(std::time::Duration::from_millis(50));
@@ -103,7 +103,7 @@ fn test_add_duplicate_employee() {
     let rt = Runtime::new().unwrap();
 
     // // start server
-    rt.spawn(cli::run_server());
+    rt.spawn(Server::run());
 
     // wait for server to come up
     std::thread::sleep(std::time::Duration::from_millis(50));
@@ -133,7 +133,7 @@ fn test_get_department() {
     let rt = Runtime::new().unwrap();
 
     // // start server
-    rt.spawn(cli::run_server());
+    rt.spawn(Server::run());
 
     // wait for server to come up
     std::thread::sleep(std::time::Duration::from_millis(50));
@@ -159,7 +159,7 @@ fn test_get_all() {
     let rt = Runtime::new().unwrap();
 
     // // start server
-    rt.spawn(cli::run_server());
+    rt.spawn(Server::run());
 
     // wait for server to come up
     std::thread::sleep(std::time::Duration::from_millis(50));
@@ -185,7 +185,7 @@ fn test_clear_company() {
     let rt = Runtime::new().unwrap();
 
     // // start server
-    rt.spawn(cli::run_server());
+    rt.spawn(Server::run());
 
     // wait for server to come up
     std::thread::sleep(std::time::Duration::from_millis(50));
