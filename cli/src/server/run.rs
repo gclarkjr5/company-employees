@@ -1,12 +1,9 @@
 
 use crate::cli::Commands;
-
-use super::Server;
+use super::{Server, ErrorGen};
 
 use tokio::io::{self, AsyncReadExt, AsyncWriteExt, Error, ErrorKind};
 use std::str;
-
-type ErrorGen = Box<dyn std::error::Error + Send + Sync>;
 
 
 impl Server {

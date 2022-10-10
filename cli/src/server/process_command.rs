@@ -1,14 +1,9 @@
 
 use crate::cli::Commands;
-use common::common::Company;
-use super::Server;
+use super::{Server, Db, ErrorGen};
 
-use std::sync::Arc;
-use tokio::sync::Mutex;
 use tokio::io::{Error, ErrorKind};
 
-type Db = Arc<Mutex<Company>>;
-type ErrorGen = Box<dyn std::error::Error + Send + Sync>;
 
 impl Server {
 

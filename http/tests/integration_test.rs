@@ -1,6 +1,6 @@
 use tokio::fs;
 use std::str;
-use http::http;
+use ::http::server::HyperServer;
 use hyper::{Body, Method, Client, Request};
 use tokio::time::{sleep, Duration};
 
@@ -12,7 +12,7 @@ const BASE_URL: &str = "http://127.0.0.1:3000";
 async fn test_missing_arguments() {
     // spawn server
     tokio::spawn(async {
-        http::run_server().await
+        HyperServer::run().await
     });
 
     // wait for server to come up
@@ -53,7 +53,7 @@ async fn test_missing_arguments() {
 async fn test_get_no_employees() {
     // spawn server
     tokio::spawn(async {
-        http::run_server().await
+        HyperServer::run().await
     });
 
     // wait for server to come up
@@ -91,7 +91,7 @@ async fn test_get_no_employees() {
 async fn test_add_employees() {
     // spawn server
     tokio::spawn(async {
-        http::run_server().await
+        HyperServer::run().await
     });
 
     // wait for server to come up
@@ -132,7 +132,7 @@ async fn test_add_employees() {
 async fn test_duplicate_employee() {
     // spawn server
     tokio::spawn(async {
-        http::run_server().await
+        HyperServer::run().await
     });
 
     // wait for server to come up
@@ -181,7 +181,7 @@ async fn test_duplicate_employee() {
 async fn test_get_departments() {
     // spawn server
     tokio::spawn(async {
-        http::run_server().await
+        HyperServer::run().await
     });
 
     // wait for server to come up
@@ -244,7 +244,7 @@ async fn test_get_departments() {
 async fn test_clearing() {
     // spawn server
     tokio::spawn(async {
-        http::run_server().await
+        HyperServer::run().await
     });
 
     // wait for server to come up
